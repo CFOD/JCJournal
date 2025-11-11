@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Display</title>
+    <style>
+        /* Reset default margin and padding */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            /* Hide any potential scrollbars */
+            overflow: hidden;
+            background: #000; /* Black background in case image is slow */
+        }
+
+        /* Style the image to cover the entire viewport */
+        #fullscreen-image {
+            /* Position absolutely to fill screen */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Ensure the image covers the area, maintaining aspect ratio */
+            object-fit: cover;
+            /* Remove any default spacing below the image */
+            display: block;
+            /* Add animation for Ken Burns effect */
+            animation: kenburns 30s ease-in-out infinite alternate;
+        }
+
+        /* Keyframes for the slow zoom/pan (Ken Burns) effect */
+        @keyframes kenburns {
+            from {
+                transform: scale(1);
+            }
+            to {
+                /* Zoom in slightly and move */
+                transform: scale(1.05) translate(-1%, -1%);
+            }
+        }
+
+        /* Container for the ember particles */
+        #ember-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none; /* Make sure it doesn't interfere */
+            z-index: 1; /* Place embers above the image */
+        }
+
+        .ember {
+            position: absolute;
+            /* Start from the bottom */
+            bottom: -20px;
+            background: rgba(255, 180, 0, 0.6);
+            border-radius: 50%;
+            opacity: 0;
+            /* Base animation */
+            animation: rise 10s infinite linear;
+            
+            /* Base size */
+            width: 3px;
+            height: 3px;
+        }
+
+        /* Keyframes for the rising ember effect */
+        @keyframes rise {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                /* Fade in */
+                opacity: 0.8;
+            }
+            90% {
+                /* Fade out near the top */
+                opacity: 0.2;
+            }
+            100% {
+                /* Move to the top and slightly sideways */
+                transform: translateY(-100vh) translateX(15px);
+                opacity: 0;
+            }
+        }
+
+        /* Create variations for a more random look */
+        .ember:nth-child(1) { left: 10%; animation-duration: 8s; animation-delay: 0s; width: 2px; height: 2px; }
+        .ember:nth-child(2) { left: 20%; animation-duration: 10s; animation-delay: 1s; background: rgba(255, 100, 0, 0.5); }
+        .ember:nth-child(3) { left: 30%; animation-duration: 6s; animation-delay: 2s; width: 4px; height: 4px; }
+        .ember:nth-child(4) { left: 40%; animation-duration: 12s; animation-delay: 0.5s; }
+        .ember:nth-child(5) { left: 50%; animation-duration: 7s; animation-delay: 3s; width: 2px; height: 2px; }
+        .ember:nth-child(6) { left: 60%; animation-duration: 9s; animation-delay: 1.5s; background: rgba(255, 200, 50, 0.6); }
+        .ember:nth-child(7) { left: 70%; animation-duration: 11s; animation-delay: 4s; width: 3px; height: 3px; }
+        .ember:nth-child(8) { left: 80%; animation-duration: 5s; animation-delay: 2.5s; }
+        .ember:nth-child(9) { left: 90%; animation-duration: 8s; animation-delay: 1.8s; width: 2px; height: 2px; }
+        .ember:nth-child(10) { left: 5%; animation-duration: 10s; animation-delay: 3.5s; background: rgba(255, 80, 0, 0.5); }
+        .ember:nth-child(11) { left: 15%; animation-duration: 7s; animation-delay: 2.2s; width: 4px; height: 4px; }
+        .ember:nth-child(12) { left: 25%; animation-duration: 9s; animation-delay: 1.2s; }
+        .ember:nth-child(13) { left: 35%; animation-duration: 11s; animation-delay: 0.8s; width: 2px; height: 2px; }
+        .ember:nth-child(14) { left: 45%; animation-duration: 6s; animation-delay: 4.5s; }
+        .ember:nth-child(15) { left: 55%; animation-duration: 8s; animation-delay: 3.8s; background: rgba(255, 150, 0, 0.6); }
+
+        /* Add a subtle vignette to darken the edges */
+        body::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Create a radial gradient from transparent center to dark edges */
+            background: radial-gradient(ellipse at center, 
+                rgba(0,0,0,0) 50%, 
+                rgba(0,0,0,0.4) 100%
+            );
+            z-index: 2; /* Place vignette above embers */
+            pointer-events: none;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- 
+      This img tag displays your uploaded image.
+      The 'src' attribute points to the file name you provided.
+      The 'alt' attribute is for accessibility, describing the image
+      (though it won't be visible on the page).
+    -->
+    <img id="fullscreen-image" src="image_39a9df.jpg" alt="Soldier walking through a fiery, smoky battlefield">
+
+    <!-- Container for the animated ember particles -->
+    <div id="ember-container">
+        <div class="ember"></div>
+        <div class="ember"></div>
+        <div class="ember"></div>
+        <div class="ember"></div>
+        <div class="ember"></div>
+        <div class="ember"></div>
+        <div class="ember"></div>
+        <div class="ember"></div>
+        <div class="ember"></div>
+        <div class="ember"></div>
+        <div class="ember"></div>
+        <div class="ember"></div>
+        <div class="ember"></div>
+        <div class="ember"></div>
+        <div class="ember"></div>
+    </div>
+</body>
+</html>
