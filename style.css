@@ -174,8 +174,9 @@ body {
 /* Revealed text */
 .reveal-text {
   margin-top: 15px;
-  font-size: 18px;
-  color: #2e7d32;
+  font-weight: bold;
+  font-size: 26px;
+  color: green;
   max-width: 500px;
   margin-left: auto;
   margin-right: auto;
