@@ -2,16 +2,37 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Eco Page</title>
+  <title>ce o Page</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="shine-wrapper">
-  <img src="ceo.jpg" alt="ceo" class="shine-image">
-  <div class="sparkles"></div>
+<!-- Clickable image -->
+<img src="sadhair.jpg" alt="Click to reveal CEO" id="trigger-image" class="trigger-image" onclick="revealContent()">
+
+<!-- Hidden content -->
+<div id="hidden-content" class="hidden">
+  <div class="shine-wrapper">
+    <img src="ceo.jpg" alt="CEO" class="shine-image">
+    <div class="sparkles"></div>
+  </div>
+
+  <p class="reveal-text">
+    Of excellent time. Your journey to CEO is just begin. Of alright will very good if journey continue on now.
+    Bald head is the start of the transform into not bad very good CEO lifestyle.
+    Enjoy the fruit of your labour and CEO time.
+  </p>
 </div>
-Of excellent time. Your journey to CEO is just begin. Of alright will very good if journey continue on now. Bald head is the start of the transform into not bad very good CEO lifestyle. Enjoy the fruit of your labour and CEO time.
+
+<script>
+  function revealContent() {
+    // Hide the trigger image
+    document.getElementById('trigger-image').style.display = 'none';
+
+    // Show the hidden content
+    document.getElementById('hidden-content').classList.remove('hidden');
+  }
+</script>
 
 </body>
 </html>
