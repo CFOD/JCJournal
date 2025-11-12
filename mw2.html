@@ -3,95 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Display</title>
+    <title>MW2 Collection Portfolio</title>
+    <!-- Importing Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Importing Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+      // Custom Tailwind config
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+          },
+        },
+      }
+    </script>
+    
     <style>
         /* Reset default margin and padding */
         body, html {
             margin: 0;
             padding: 0;
-            height: 100%;
             width: 100%;
-            /* Hide any potential scrollbars */
-            overflow: hidden;
-            background: #000; /* Black background in case image is slow */
+            /* Using a dark background for the whole page */
+            /* REMOVED: background: #000; */
+            /* This was covering your fixed hero section. */
+            font-family: 'Inter', sans-serif;
+            /* Allow smooth scrolling for any anchor links (if added later) */
+            scroll-behavior: smooth;
         }
 
-        /* Style the image to cover the entire viewport */
+        /* 1. HERO SECTION STYLES (Your original page) */
+
+        .hero-section {
+            /* CHANGED: This is now fixed to the viewport */
+            position: fixed; 
+            top: 0;
+            left: 0;
+            /* REMOVED: z-index: -1; This was hiding the entire section */
+            
+            height: 100vh; /* Full viewport height */
+            width: 100%;
+            overflow: hidden; /* This is KEY: it traps the embers in this section */
+            /* ADDED: Explicitly set the hero to layer 1 */
+            z-index: 1;
+        }
+
+        /* Style the image to cover the entire hero */
         #fullscreen-image {
-            /* Position absolutely to fill screen */
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            /* Ensure the image covers the area, maintaining aspect ratio */
             object-fit: cover;
-            /* Remove any default spacing below the image */
             display: block;
+            /* This z-index is local to .hero-section */
+            z-index: 1;
             /* Add animation for Ken Burns effect */
             animation: kenburns 30s ease-in-out infinite alternate;
         }
 
-        /* Keyframes for the slow zoom/pan (Ken Burns) effect */
         @keyframes kenburns {
-            from {
-                transform: scale(1);
-            }
-            to {
-                /* Zoom in slightly and move */
-                transform: scale(1.05) translate(-1%, -1%);
-            }
+            from { transform: scale(1); }
+            to { transform: scale(1.05) translate(-1%, -1%); }
         }
 
         /* Container for the ember particles */
         #ember-container {
-            position: absolute;
+            /* CHANGED: Position is now 'fixed' to float over everything */
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden;
-            pointer-events: none; /* Make sure it doesn't interfere */
-            z-index: 1; /* Place embers above the image */
+            pointer-events: none;
+            /* CHANGED: z-index is now '3' to be on top of the content (which is z-index 2) */
+            z-index: 3; 
         }
 
         .ember {
             position: absolute;
-            /* Start from the bottom */
             bottom: -20px;
             background: rgba(255, 180, 0, 0.6);
             border-radius: 50%;
             opacity: 0;
-            /* Base animation */
             animation: rise 10s infinite linear;
-            
-            /* Base size */
             width: 3px;
             height: 3px;
         }
 
-        /* Keyframes for the rising ember effect */
         @keyframes rise {
-            0% {
-                transform: translateY(0) translateX(0);
-                opacity: 0;
-            }
-            10% {
-                /* Fade in */
-                opacity: 0.8;
-            }
-            90% {
-                /* Fade out near the top */
-                opacity: 0.2;
-            }
-            100% {
-                /* Move to the top and slightly sideways */
-                transform: translateY(-100vh) translateX(15px);
-                opacity: 0;
-            }
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.2; }
+            100% { transform: translateY(-100vh) translateX(15px); opacity: 0; }
         }
 
-        /* Create variations for a more random look */
+        /* Ember variations */
         .ember:nth-child(1) { left: 10%; animation-duration: 8s; animation-delay: 0s; width: 2px; height: 2px; }
         .ember:nth-child(2) { left: 20%; animation-duration: 10s; animation-delay: 1s; background: rgba(255, 100, 0, 0.5); }
         .ember:nth-child(3) { left: 30%; animation-duration: 6s; animation-delay: 2s; width: 4px; height: 4px; }
@@ -102,57 +114,184 @@
         .ember:nth-child(8) { left: 80%; animation-duration: 5s; animation-delay: 2.5s; }
         .ember:nth-child(9) { left: 90%; animation-duration: 8s; animation-delay: 1.8s; width: 2px; height: 2px; }
         .ember:nth-child(10) { left: 5%; animation-duration: 10s; animation-delay: 3.5s; background: rgba(255, 80, 0, 0.5); }
-        .ember:nth-child(11) { left: 15%; animation-duration: 7s; animation-delay: 2.2s; width: 4px; height: 4px; }
-        .ember:nth-child(12) { left: 25%; animation-duration: 9s; animation-delay: 1.2s; }
-        .ember:nth-child(13) { left: 35%; animation-duration: 11s; animation-delay: 0.8s; width: 2px; height: 2px; }
-        .ember:nth-child(14) { left: 45%; animation-duration: 6s; animation-delay: 4.5s; }
-        .ember:nth-child(15) { left: 55%; animation-duration: 8s; animation-delay: 3.8s; background: rgba(255, 150, 0, 0.6); }
 
-        /* Add a subtle vignette to darken the edges */
-        body::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            /* Create a radial gradient from transparent center to dark edges */
-            background: radial-gradient(ellipse at center, 
-                rgba(0,0,0,0) 50%, 
-                rgba(0,0,0,0.4) 100%
-            );
-            z-index: 2; /* Place vignette above embers */
-            pointer-events: none;
+        /* REMOVED: Vignette style block to maximize brightness */
+        /* .hero-section::after { ... } */
+
+        /* 2. CONTENT SECTION STYLES */
+
+        /* NEW STYLE: Add semi-transparent background and blur to the content area */
+        #content {
+            /* CHANGED: Was 0.9 (90% opaque), which was too dark to see through.
+              Now set to 0.7 (70% opaque) to make the background image and
+              particles much more visible.
+            */
+            background-color: rgba(27, 27, 27, 0.2);
+            
+            /* Add the frosted glass effect */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px); /* For Safari */
+
+            /* CHANGED: Explicitly set the content to layer 2 (on top of hero's layer 1) */
+            position: relative;
+            z-index: 2;
         }
 
+        /* Animated scroll down indicator - REMOVED */
+        
     </style>
 </head>
+<!-- 
+  REMOVED 'bg-black' from body tag. 
+  The hero section now acts as the base background. 
+-->
 <body>
-    <!-- 
-      This img tag displays your uploaded image.
-      The 'src' attribute points to the file name you provided.
-      The 'alt' attribute is for accessibility, describing the image
-      (though it won't be visible on the page).
-    -->
-    <img id="fullscreen-image" src="image_39a9df.jpg" alt="Soldier walking through a fiery, smoky battlefield">
 
-    <!-- Container for the animated ember particles -->
+    <!-- 
+      SECTION 1: HERO (Your original page)
+      This stays at the top and fills the screen.
+      CHANGED: It's now fixed and behind the content.
+    -->
+    <div class="hero-section">
+        <!-- 
+          FIXED: The filename was incorrect. 
+          Changed "image_33a9df.jpg" back to the correct "image_39a9df.jpg" 
+        -->
+        <img id="fullscreen-image" src="image_39a9df.jpg" alt="Soldier walking through a fiery, smoky battlefield">
+
+        <!-- Container for the animated ember particles - REMOVED FROM HERE -->
+        
+        <!-- Scroll down hint - REMOVED -->
+        
+    </div>
+
+    <!-- 
+      NEW: The ember container is now here, outside the hero section,
+      so it can float on top of the content.
+    -->
     <div id="ember-container">
-        <div class="ember"></div>
-        <div class="ember"></div>
-        <div class="ember"></div>
-        <div class="ember"></div>
-        <div class="ember"></div>
-        <div class="ember"></div>
-        <div class="ember"></div>
-        <div class="ember"></div>
-        <div class="ember"></div>
-        <div class="ember"></div>
-        <div class="ember"></div>
-        <div class="ember"></div>
-        <div class="ember"></div>
-        <div class="ember"></div>
+        <!-- Embers -->
+        <div class="ember"></div> <div class="ember"></div> <div class="ember"></div>
+        <div class="ember"></div> <div class="ember"></div> <div class="ember"></div>
+        <div class="ember"></div> <div class="ember"></div> <div class="ember"></div>
         <div class="ember"></div>
     </div>
+
+    <!-- 
+      SECTION 2: CONTENT (Your new portfolio area)
+      This is where you add your text and images.
+      CHANGED: Removed 'bg-zinc-900' from class as it's now in the <style> tag
+    -->
+    <div id="content" class="text-gray-300 py-20 px-4 sm:px-6 lg:px-8">
+        
+        <!-- Max-width container to keep content centered and readable -->
+        <div class="max-w-4xl mx-auto">
+
+            <!-- Title Section -->
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-white text-center mb-4">
+                My MW2 Collection
+            </h1>
+            <p class="text-xl text-gray-400 text-center mb-16">
+                A portfolio of my favorite in-game moments, loadouts, and achievements.
+            </p> <!-- FIXED: This was </D> which is invalid HTML -->
+
+            <!-- Text Section -->
+            <div class="mb-16">
+                <h2 class="text-3xl font-bold text-white mb-4">Welcome to the Armory</h2>
+                <p class="text-lg mb-4">
+                    <!-- START WRITING HERE -->
+                    Ever since launch, I've been grinding in Modern Warfare 2. This page is a tribute to all the epic moments, the perfect loadouts I've built, and the challenges I've completed. Scroll down to see some of my favorites.
+                    <!-- END WRITING HERE -->
+                </p>
+                <p class="text-lg">
+                    <!-- MORE TEXT HERE -->
+                    Feel free to add more paragraphs here. This text is fully editable.
+                </p>
+            </div>
+
+            <!-- Gallery Section -->
+            <div class="mb-16">
+                <h2 class="text-3xl font-bold text-white mb-6">Gallery Highlights</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- Image 1 -->
+                    <!-- CHANGED: Made card background slightly more opaque for readability -->
+                    <div class="bg-zinc-800/95 rounded-lg overflow-hidden shadow-lg">
+                        <!-- 
+                          HOW TO ADD YOUR IMAGE:
+                          1. Add your image (e.g., "loadout.jpg") to the same folder as this HTML file.
+                          2. Change the 'src' below from "https://placehold.co/..." to "loadout.jpg".
+                        -->
+                        <img src="https://placehold.co/600x400/18181b/ffffff?text=Your+Image+Here" 
+                             alt="My favorite M4 loadout" 
+                             class="w-full h-64 object-cover">
+                        
+                        <div class="p-4">
+                            <h3 class="text-xl font-semibold text-white">My "No Recoil" M4</h3>
+                            <p class="text-gray-400 mt-2">
+                                <!-- Add your description here -->
+                                This build took me weeks to perfect. All about stability and speed.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Image 2 -->
+                    <!-- CHANGED: Made card background slightly more opaque for readability -->
+                    <div class="bg-zinc-800/95 rounded-lg overflow-hidden shadow-lg">
+                        <!-- 
+                          HOW TO ADD YOUR IMAGE:
+                          1. Add your image (e.g., "best-game.png") to the same folder.
+                          2. Change the 'src' below to "best-game.png".
+                        -->
+                        <img src="https://placehold.co/600x400/18181b/ffffff?text=Another+Screenshot" 
+                             alt="High-score screenshot" 
+                             class="w-full h-64 object-cover">
+                        
+                        <div class="p-4">
+                            <h3 class="text-xl font-semibold text-white">Best Game Score</h3>
+                            <p class="text-gray-400 mt-2">
+                                <!-- Add your description here -->
+                                Never going to top this 100+ kill game on Shipment.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Image 3 (Spans full width) -->
+                    <!-- CHANGED: Made card background slightly more opaque for readability -->
+                    <div class="bg-zinc-800/95 rounded-lg overflow-hidden shadow-lg md:col-span-2">
+                        <!-- 
+                          HOW TO ADD YOUR IMAGE:
+                          1. Add your image (e.g., "sniper-shot.jpg") to the same folder.
+                          2. Change the 'src' below to "sniper-shot.jpg".
+                        -->
+                        <img src="https://placehold.co/1200x600/18181b/ffffff?text=Wide+Image" 
+                             alt="Epic sniper shot" 
+                             class="w-full h-80 object-cover">
+                        
+                        <div class="p-4">
+                            <h3 class="text-xl font-semibold text-white">Impossible Sniper Shot</h3>
+                            <p class="text-gray-400 mt-2">
+                                <!-- Add your description here -->
+                                You just had to be there. Cross-map on Al Mazrah.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Final Text Section -->
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-white mb-4">My Thoughts on the Game</h2>
+                <p class="text-lg max-w-2xl mx-auto">
+                    <!-- More text here -->
+                    Overall, MW2 has been an incredible experience. The gunplay is top-notch, and the camos... don't even get me started on the Orion grind. It was tough, but 100% worth it.
+                </p>
+            </div>
+
+        </div>
+    </div>
+
 </body>
 </html>
