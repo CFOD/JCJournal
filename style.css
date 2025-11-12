@@ -125,10 +125,7 @@ body {
   transform: scale(1.05);
 }
 
-/* Hidden content */
-.hidden {
-  display: none;
-}
+
 
 /* Center the revealed image neatly */
 .shine-wrapper {
@@ -224,7 +221,13 @@ body {
   pointer-events: none; /* so the click passes through */
   transition: opacity 0.3s ease;
   opacity: 0.8;
+  z-index: 10;
 }
 .trigger-wrapper:hover .overlay-text {
   opacity: 1;
+}
+
+/* Hidden content */
+.hidden {
+  display: none !important;
 }
