@@ -188,3 +188,43 @@ body {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Wrapper to hold image + overlay text */
+.trigger-wrapper {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+.trigger-wrapper:hover {
+  transform: scale(1.05);
+}
+
+/* The clickable image */
+.trigger-image {
+  width: 250px;
+  display: block;
+  border-radius: 10px;
+}
+
+/* Overlay text */
+.overlay-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  pointer-events: none; /* so the click passes through */
+  transition: opacity 0.3s ease;
+  opacity: 0.8;
+}
+.trigger-wrapper:hover .overlay-text {
+  opacity: 1;
+}
