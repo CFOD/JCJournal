@@ -26,21 +26,6 @@
         font-family: 'GlacialIndifference-Bold', sans-serif;
       }
 
-      /* Simple transition for the article content */
-      .full-article-content {
-        transition: all 0.3s ease-in-out;
-        overflow: hidden;
-      }
-      
-      /* We can add a max-height transition for a smooth slide */
-      .full-article-content.hidden {
-        max-height: 0;
-      }
-      
-      .full-article-content:not(.hidden) {
-        max-height: 1000px; /* Set to a value larger than any article */
-      }
-
       /* Hide scrollbar while keeping functionality */
       main {
         -ms-overflow-style: none;  /* IE and Edge */
@@ -53,20 +38,23 @@
 </head>
 <body class="bg-[#FFFDF3] font-inter text-black h-screen overflow-hidden flex flex-col">
 
-    <div class="container mx-auto p-8 max-w-6xl flex flex-col h-full">
+    <div class="container mx-auto p-4 sm:p-8 max-w-6xl flex flex-col h-full">
 
         <header class="mb-8">
             
             <div class="flex justify-between items-center border-black pb-2 mb-2">
-                <div class="border-2 border-black p-4 text-center font-bold text-xs w-44 uppercase">
+                <!-- Responsive Date Box -->
+                <div class="border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-28 sm:w-44 uppercase">
                     <span id="current-date"></span>
                 </div>
                 
-                <h1 class="font-title-custom text-center text-8xl md:text-9xl uppercase mx-4">
+                <!-- Responsive Title -->
+                <h1 class="font-title-custom text-center text-5xl md:text-7xl lg:text-9xl uppercase mx-2 sm:mx-4">
                         JCJournal
                 </h1>
                 
-                <input type="text" id="search-input" placeholder="SEARCH" class="border-2 border-black p-4 text-center font-bold text-xs w-44 uppercase bg-transparent focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
+                <!-- Responsive Search Box -->
+                <input type="text" id="search-input" placeholder="SEARCH" class="border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-28 sm:w-44 uppercase bg-transparent focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
             </div>
 
 
@@ -84,156 +72,153 @@
 
         </header>
 
-        <main id="article-list" class="max-w-4xl mx-auto flex-1 overflow-y-auto">
+        <main id="article-list" class="max-w-4xl mx-auto flex-1 overflow-y-auto w-full">
 
-            <article class="mb-10 flex items-start space-x-6">
-                <img src="image.jpg" 
-                     alt="Placeholder thumbnail for the article" 
-                     class="w-48 h-32 object-cover rounded flex-shrink-0">
-                <div>
-                    <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide">
-                        There is a non-zero chance this is a TITLE!!
-                    </h2>
+            <!-- Responsive Article Layout: Stacks on mobile, row on desktop -->
+            <article class="mb-10 flex flex-col sm:flex-row items-start">
+                <!-- Image links to article page -->
+                <a href="article-1.html" class="flex-shrink-0 w-full sm:w-48">
+                    <img src="image.jpg" 
+                         alt="Placeholder thumbnail for the article" 
+                         class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0">
+                </a>
+                <div class="sm:ml-6 w-full">
+                    <!-- Title links to article page -->
+                    <a href="article-1.html">
+                        <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors">
+                            There is a non-zero chance this is a TITLE!!
+                        </h2>
+                    </a>
                     <p class="text-base mb-3 text-gray-800">
                         SUMMARY FOR THE STUPID POINTLESS ARTICLE IN QUESTION
                     </p>
                     <div class="flex items-center space-x-3">
-                        <a href="#" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
+                        <!-- Button links to article page -->
+                        <a href="article-1.html" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
                             Read More
                         </a>
                         <span class="text-sm text-gray-600">by Connor O'Donnell</span>
                     </div>
-
-                    <!-- Hidden Full Article Content -->
-                    <div class="full-article-content hidden mt-4 text-gray-700 space-y-4">
-                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-                        <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-                    </div>
-                    <!-- End Hidden Content -->
-
                 </div>
             </article>
 
-            <article class="mb-10 flex items-start space-x-6">
-                <img src="banana.png" 
-                     alt="Placeholder thumbnail for the article" 
-                     class="w-48 h-32 object-cover rounded flex-shrink-0">
-                <div>
-                    <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide">
-                        Fantastic Piece of Writing
-                    </h2>
+            <article class="mb-10 flex flex-col sm:flex-row items-start">
+                <a href="article-2.html" class="flex-shrink-0 w-full sm:w-48">
+                    <img src="banana.png" 
+                         alt="Placeholder thumbnail for the article" 
+                         class="w-full h-48 sm:h-32 object-cover grayscale rounded mb-4 sm:mb-0">
+                </a>
+                <div class="sm:ml-6 w-full">
+                    <a href="article-2.html">
+                        <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors">
+                            Fantastic Piece of Writing
+                        </h2>
+                    </a>
                     <p class="text-base mb-3 text-gray-800">
                         REALLY GOOD STUFF, WHAT A GREAT READ!
                     </p>
                     <div class="flex items-center space-x-3">
-                        <a href="#" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
+                        <a href="article-2.html" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
                             Read More
                         </a>
                         <span class="text-sm text-gray-600">by Jack Pendry</span>
                     </div>
-
-                    <!-- Hidden Full Article Content -->
-                    <div class="full-article-content hidden mt-4 text-gray-700 space-y-4">
-                        <p>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Donec velit neque, auctor sit amet aliquam vel, ullamcorper sit amet ligula. Curabitur non nulla sit amet nisl tempus convallis quis ac lectus.</p>
-                        <p>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Donec velit neque, auctor sit amet aliquam vel, ullamcorper sit amet ligula. Curabitur non nulla sit amet nisl tempus convallis quis ac lectus.</p>
-                    </div>
-                    <!-- End Hidden Content -->
-
                 </div>
             </article>
 
-            <!-- ADDED ARTICLE 3 -->
-            <article class="mb-10 flex items-start space-x-6">
-                <img src="yeah.png" 
-                     alt="Placeholder thumbnail for the article" 
-                     class="w-48 h-32 object-cover rounded flex-shrink-0">
-                <div>
-                    <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide">
-                        A Third Article Appears
-                    </h2>
+            <article class="mb-10 flex flex-col sm:flex-row items-start">
+                <a href="article-3.html" class="flex-shrink-0 w-full sm:w-48">
+                    <img src="https://placehold.co/192x128/000000/ffffff?text=Image+3&font=inter" 
+                         alt="Placeholder thumbnail for the article" 
+                         class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0">
+                </a>
+                <div class="sm:ml-6 w-full">
+                    <a href="article-3.html">
+                        <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors">
+                            A Third Article Appears
+                        </h2>
+                    </a>
                     <p class="text-base mb-3 text-gray-800">
                         This one is also just a placeholder, but it helps with scrolling.
                     </p>
                     <div class="flex items-center space-x-3">
-                        <a href="#" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
+                        <a href="article-3.html" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
                             Read More
                         </a>
                         <span class="text-sm text-gray-600">by Jane Doe</span>
                     </div>
-                    <div class="full-article-content hidden mt-4 text-gray-700 space-y-4">
-                        <p>Praesent sapien massa, convallis a pellentesque nec, egestas non nisi. Nulla quis lorem ut libero malesuada feugiat. Curabitur arcu erat, accsumsan id imperdiet et, porttitor at sem.</p>
-                    </div>
                 </div>
             </article>
 
-            <!-- ADDED ARTICLE 4 -->
-            <article class="mb-10 flex items-start space-x-6">
-                <img src="https://placehold.co/192x128/cccccc/000000?text=Image+4&font=inter" 
-                     alt="Placeholder thumbnail for the article" 
-                     class="w-48 h-32 object-cover grayscale rounded flex-shrink-0">
-                <div>
-                    <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide">
-                        The Fourth Title
-                    </h2>
+            <article class="mb-10 flex flex-col sm:flex-row items-start">
+                <a href="article-4.html" class="flex-shrink-0 w-full sm:w-48">
+                    <img src="https://placehold.co/192x128/cccccc/000000?text=Image+4&font=inter" 
+                         alt="Placeholder thumbnail for the article" 
+                         class="w-full h-48 sm:h-32 object-cover grayscale rounded mb-4 sm:mb-0">
+                </a>
+                <div class="sm:ml-6 w-full">
+                    <a href="article-4.html">
+                        <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors">
+                            The Fourth Title
+                        </h2>
+                    </a>
                     <p class="text-base mb-3 text-gray-800">
                         Another summary to fill the space and ensure the scrollbar is visible on load.
                     </p>
                     <div class="flex items-center space-x-3">
-                        <a href="#" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
+                        <a href="article-4.html" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
                             Read More
                         </a>
                         <span class="text-sm text-gray-600">by John Smith</span>
                     </div>
-                    <div class="full-article-content hidden mt-4 text-gray-700 space-y-4">
-                        <p>Donec sollicitudin molestie malesuada. Vivamus suscipit tortor eget felis porttitor volutpat. Cras ultricies ligula sed magna dictum porta.</p>
-                    </div>
                 </div>
             </article>
 
-            <!-- ADDED ARTICLE 5 -->
-            <article class="mb-10 flex items-start space-x-6">
-                <img src="https://placehold.co/192x128/000000/ffffff?text=Image+5&font=inter" 
-                     alt="Placeholder thumbnail for the article" 
-                     class="w-48 h-32 object-cover rounded flex-shrink-0">
-                <div>
-                    <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide">
-                        Article Number Five
-                    </h2>
+            <article class="mb-10 flex flex-col sm:flex-row items-start">
+                <a href="article-5.html" class="flex-shrink-0 w-full sm:w-48">
+                    <img src="https://placehold.co/192x128/000000/ffffff?text=Image+5&font=inter" 
+                         alt="Placeholder thumbnail for the article" 
+                         class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0">
+                </a>
+                <div class="sm:ml-6 w-full">
+                    <a href="article-5.html">
+                        <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors">
+                            Article Number Five
+                        </h2>
+                    </a>
                     <p class="text-base mb-3 text-gray-800">
                         This is the last of the initially loaded articles.
                     </p>
                     <div class="flex items-center space-x-3">
-                        <a href="#" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
+                        <a href="article-5.html" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
                             Read More
                         </a>
                         <span class="text-sm text-gray-600">by A. Person</span>
-                    </div>
-                    <div class="full-article-content hidden mt-4 text-gray-700 space-y-4">
-                        <p>Quisque velit nisi, pretium ut lacinia in, elementum id enim. Proin eget tortor risus. Curabitur non nulla sit amet nisl tempus convallis quis ac lectus.</p>
                     </div>
                 </div>
             </article>
 
             <!-- HIDDEN ARTICLE 6 - Ready to be loaded by script -->
-            <article class="mb-10 flex items-start space-x-6 hidden hidden-article">
-                <img src="https://placehold.co/192x128/cccccc/000000?text=Image+6&font=inter" 
-                     alt="Placeholder thumbnail for the article" 
-                     class="w-48 h-32 object-cover grayscale rounded flex-shrink-0">
-                <div>
-                    <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide">
-                        The Sixth Article (Lazy Loaded)
-                    </h2>
+            <article class="mb-10 flex flex-col sm:flex-row items-start hidden hidden-article">
+                <a href="article-6.html" class="flex-shrink-0 w-full sm:w-48">
+                    <img src="https://placehold.co/192x128/cccccc/000000?text=Image+6&font=inter" 
+                         alt="Placeholder thumbnail for the article" 
+                         class="w-full h-48 sm:h-32 object-cover grayscale rounded mb-4 sm:mb-0">
+                </a>
+                <div class="sm:ml-6 w-full">
+                    <a href="article-6.html">
+                        <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors">
+                            The Sixth Article (Lazy Loaded)
+                        </h2>
+                    </a>
                     <p class="text-base mb-3 text-gray-800">
                         This article was hidden on load, but the script revealed it when you scrolled.
                     </p>
                     <div class="flex items-center space-x-3">
-                        <a href="#" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
+                        <a href="article-6.html" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
                             Read More
                         </a>
                         <span class="text-sm text-gray-600">by I. M. Hidden</span>
-                    </div>
-                    <div class="full-article-content hidden mt-4 text-gray-700 space-y-4">
-                        <p>This is the content for the 6th article. It loaded dynamically!</p>
                     </div>
                 </div>
             </article>
@@ -265,36 +250,6 @@
             }
         })();
 
-        // Script for "Read More" buttons (using event delegation)
-        (function() {
-            const articleList = document.getElementById('article-list');
-            
-            articleList.addEventListener('click', function(event) {
-                // Find the read-more-btn that was clicked
-                const readMoreBtn = event.target.closest('.read-more-btn');
-                
-                if (readMoreBtn) {
-                    event.preventDefault(); 
-                    
-                    const articleDiv = readMoreBtn.closest('article > div');
-                    if (!articleDiv) return;
-
-                    const fullArticle = articleDiv.querySelector('.full-article-content');
-
-                    if (fullArticle) {
-                        const isHidden = fullArticle.classList.contains('hidden');
-                        if (isHidden) {
-                            fullArticle.classList.remove('hidden');
-                            readMoreBtn.textContent = 'Read Less';
-                        } else {
-                            fullArticle.classList.add('hidden');
-                            readMoreBtn.textContent = 'Read More';
-                        }
-                    }
-                }
-            });
-        })();
-
         // Script for live search
         (function() {
             const searchInput = document.getElementById('search-input');
@@ -302,7 +257,8 @@
 
             searchInput.addEventListener('input', function(event) {
                 const searchTerm = event.target.value.toLowerCase();
-                const articles = articleList.querySelectorAll('article'); // Get all articles, including hidden ones
+                // Get all articles that are direct children of the list
+                const articles = articleList.querySelectorAll('article'); 
 
                 articles.forEach(article => {
                     const title = article.querySelector('h2').textContent.toLowerCase();
