@@ -1,25 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JC JOURNAL</title>
-
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JC Journal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Playfair+Display:wght@900&display=swap" rel="stylesheet">
+    
+    <style>
+      .font-inter {
+        font-family: 'Inter', sans-serif;
+      }
+      .font-title-serif {
+        font-family: 'Playfair Display', serif;
+        font-weight: 900;
+      }
+    </style>
 </head>
-<body>
-  <header>
-    <div class="logo">
-      <div class="logo-top">JC</div>
-      <div class="logo-bottom">JOURNAL</div>
-    </div>
-    <div class="line"></div>
-    <div class="line"></div>
-  </header>
+<body class="bg-[#FFFDF3] font-inter text-black">
 
-  <main>
-    <a href="ceo.html">BECOME CEO</a>
-    Good. Become CEO. Get of your true nature and be okay the best of all them. It will fine this way.
-  </main>
+    <div class="container mx-auto p-8 max-w-6xl">
+
+        <header class="mb-8">
+            
+            <div class="flex justify-between items-start border-b border-black pb-2 mb-2">
+                <div class="border-2 border-black p-4 text-center font-bold text-xs w-44 uppercase">
+                    Periwinkle Placeholder Text
+                </div>
+                <div class="border-2 border-black p-4 text-center font-bold text-xs w-44 uppercase">
+                    Periwinkle Placeholder Text
+                </div>
+            </div>
+
+            <h1 class="font-title-serif text-center text-8xl md:text-9xl uppercase my-4">
+                JC Journal
+            </h1>
+
+            <div class="border-b border-black"></div>
+            <div class="border-b border-red-500 my-1"></div> 
+            <div class="border-b border-black mb-4"></div>
+
+
+            <p class="text-center text-sm mb-4 max-w-4xl mx-auto">
+                Most of important text writings and topical tanigble talking musings about with which the world is revolve. Truth is the most it important of all knowledge.
+            </p>
+
+            <div class="border-b border-black"></div>
+
+        </header>
+
+        <main class="max-w-4xl mx-auto">
+
+            <article class="mb-10">
+                <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide">
+                    Stupid Pointless Title to a Stupid Pointless Article
+                </h2>
+                <p class="text-base mb-3 text-gray-800">
+                    SUMMARY FOR THE STUPID POINTLESS ARTICLE IN QUESTION
+                </p>
+                <div class="flex items-center space-x-3">
+                    <a href="#" class="bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
+                        Read More
+                    </a>
+                    <span class="text-sm text-gray-600">by Connor O'Donnell</span>
+                </div>
+            </article>
+
+            <article class="mb-10">
+                <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide">
+                    Fantastic Piece of Writing
+                </h2>
+                <p class="text-base mb-3 text-gray-800">
+                    REALLY GOOD STUFF, WHAT A GREAT READ!
+                </p>
+                <div class="flex items-center space-x-3">
+                    <a href="#" class="bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
+                        Read More
+                    </a>
+                    <span class="text-sm text-gray-600">by Jack Pendry</span>
+                </div>
+            </article>
+
+        </main>
+
+    </div>
+
 </body>
 </html>
