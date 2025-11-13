@@ -10,12 +10,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Playfair+Display:wght@900&display=swap" rel="stylesheet">
     
     <style>
+		@font-face {
+        font-family: 'GlacialIndifference-Bold';
+        src: url('fonts/GlacialIndifference-Bold.otf') format('opentype');
+        font-weight: bold;
+        font-style: normal;
+      }
+		
       .font-inter {
         font-family: 'Inter', sans-serif;
       }
       .font-title-serif {
         font-family: 'Playfair Display', serif;
         font-weight: 900;
+      }
+	 .font-title-custom {
+        font-family: 'GlacialIndifference-Bold', sans-serif;
       }
     </style>
 </head>
@@ -34,7 +44,7 @@
                 </div>
             </div>
 
-            <h1 class="font-title-serif text-center text-8xl md:text-9xl uppercase my-4">
+            <h1 class="font-title-custom text-center text-8xl md:text-9xl uppercase my-4">
                 JC Journal
             </h1>
 
