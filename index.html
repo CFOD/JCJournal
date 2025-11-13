@@ -7,24 +7,21 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Playfair+Display:wght@900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     
     <style>
-		@font-face {
+      @font-face {
         font-family: 'GlacialIndifference-Bold';
         src: url('fonts/GlacialIndifference-Bold.otf') format('opentype');
         font-weight: bold;
         font-style: normal;
       }
-		
+
       .font-inter {
         font-family: 'Inter', sans-serif;
       }
-      .font-title-serif {
-        font-family: 'Playfair Display', serif;
-        font-weight: 900;
-      }
-	 .font-title-custom {
+      
+      .font-title-custom {
         font-family: 'GlacialIndifference-Bold', sans-serif;
       }
     </style>
@@ -37,14 +34,15 @@
             
             <div class="flex justify-between items-start border-b border-black pb-2 mb-2">
                 <div class="border-2 border-black p-4 text-center font-bold text-xs w-44 uppercase">
-                    Periwinkle Placeholder Text
+                    ISSUE #001 <br>
+                    NOVEMBER 13, 2025
                 </div>
-                <div class="border-2 border-black p-4 text-center font-bold text-xs w-44 uppercase">
-                    Periwinkle Placeholder Text
-                </div>
+                <button class="border-2 border-black p-4 text-center font-bold text-xs w-44 uppercase hover:bg-gray-100 transition-colors">
+                    SEARCH
+                </button>
             </div>
 
-            <h1 class="font-bold text-center text-8xl md:text-9xl uppercase my-4">
+            <h1 class="font-title-custom text-center text-8xl md:text-9xl uppercase my-4">
                 JC Journal
             </h1>
 
@@ -63,37 +61,53 @@
 
         <main class="max-w-4xl mx-auto">
 
-            <article class="mb-10">
-                <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide">
-                    Stupid Pointless Title to a Stupid Pointless Article
-                </h2>
-                <p class="text-base mb-3 text-gray-800">
-                    SUMMARY FOR THE STUPID POINTLESS ARTICLE IN QUESTION
-                </p>
-                <div class="flex items-center space-x-3">
-                    <a href="#" class="bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
-                        Read More
-                    </a>
-                    <span class="text-sm text-gray-600">by Connor O'Donnell</span>
+            <article class="mb-10 flex items-start space-x-6">
+                <img src="https://placehold.co/400x300/e2e8f0/333?text=Thumbnail" 
+                     alt="Placeholder thumbnail for the article" 
+                     class="w-48 h-32 object-cover grayscale rounded flex-shrink-0">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide">
+                        Stupid Pointless Title to a Stupid Pointless Article
+                    </h2>
+                    <p class="text-base mb-3 text-gray-800">
+                        SUMMARY FOR THE STUPID POINTLESS ARTICLE IN QUESTION
+                    </p>
+                    <div class="flex items-center space-x-3">
+                        <a href="#" class="bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
+                            Read More
+                        </a>
+                        <span class="text-sm text-gray-600">by Connor O'Donnell</span>
+                    </div>
                 </div>
             </article>
 
-            <article class="mb-10">
-                <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide">
-                    Fantastic Piece of Writing
-                </h2>
-                <p class="text-base mb-3 text-gray-800">
-                    REALLY GOOD STUFF, WHAT A GREAT READ!
-                </p>
-                <div class="flex items-center space-x-3">
-                    <a href="#" class="bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
-                        Read More
-                    </a>
-                    <span class="text-sm text-gray-600">by Jack Pendry</span>
+            <article class="mb-10 flex items-start space-x-6">
+                <img src="https://placehold.co/400x300/e2e8f0/333?text=Thumbnail" 
+                     alt="Placeholder thumbnail for the article" 
+                     class="w-48 h-32 object-cover grayscale rounded flex-shrink-0">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide">
+                        Fantastic Piece of Writing
+                    </h2>
+                    <p class="text-base mb-3 text-gray-800">
+                        REALLY GOOD STUFF, WHAT A GREAT READ!
+                    </p>
+                    <div class="flex items-center space-x-3">
+                        <a href="#" class="bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
+                            Read More
+                        </a>
+                        <span class="text-sm text-gray-600">by Jack Pendry</span>
+                    </div>
                 </div>
             </article>
 
         </main>
+
+        <footer class="border-t border-black pt-6 mt-12 text-center">
+            <p class="text-xs text-gray-600 uppercase">
+                © 2025 JC Journal. All Rights Reserved.
+            </p>
+        </footer>
 
     </div>
 
