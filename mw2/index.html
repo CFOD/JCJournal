@@ -69,6 +69,24 @@
             to { transform: scale(1.05) translate(-1%, -1%); }
         }
 
+		#scanline-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allows clicks to pass through */
+            z-index: 3; /* MODIFIED: Was 2, now 3 (on top of content) */
+            background: linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0) 50%,
+                rgba(0, 0, 0, 0.1) 50%
+            );
+            background-size: 100% 4px; /* Thickness of the lines */
+            opacity: 0.3; /* Subtle effect */
+            animation: scanmove 4s linear infinite;
+        }
+		
         /* Container for the ember particles */
         #ember-container {
             /* Position is now 'fixed' to float over everything */
@@ -126,6 +144,52 @@
             z-index: 2;
         }
         
+		.gallery-image {
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out;
+        }
+        .gallery-image:hover {
+            transform: scale(1.03);
+        }
+
+        /* NEW: Lightbox styles */
+		#lightbox {
+            position: fixed;
+            z-index: 50;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+        #lightbox-img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            font-size: 3rem;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .lightbox-close:hover {
+            color: #ccc;
+        }
+		
     </style>
 </head>
 
@@ -147,6 +211,7 @@
         <div class="ember"></div>
     </div>
 
+	<div id="scanline-overlay"></div>
     <!-- 
       SECTION 2: CONTENT (Your new portfolio area)
       This is where you add your text and images.
@@ -190,7 +255,7 @@
 
                         <img src="resurgence_pack.jpg" 
                              alt="My favorite M4 loadout" 
-                             class="w-full h-64 object-cover">
+                             class="w-full h-64 object-cover gallery-image">
                         
                         <div class="p-4">
                             <h3 class="text-xl font-semibold text-white">THIS IS A PICTURE OF A DLC BOX GAME BOX ADDON DLC ETC...</h3>
@@ -206,7 +271,7 @@
 
                         <img src="resurgence_sticker.jpg" 
                              alt="High-score screenshot" 
-                             class="w-full h-64 object-cover">
+                             class="w-full h-64 object-cover gallery-image">
                         
                         <div class="p-4">
                             <h3 class="text-xl font-semibold text-white">I TOOKED THE STICKER OFF NO MORE STICKER HAHAHAHA</h3>
@@ -222,7 +287,7 @@
 
                         <img src="patch.jpg" 
                              alt="Epic sniper shot" 
-                             class="w-full h-80 object-cover">
+                             class="w-full h-80 object-cover gallery-image">
                         
                         <div class="p-4">
                             <h3 class="text-xl font-semibold text-white">You aren't gonna believe it... but this is a patch</h3>
@@ -245,10 +310,52 @@
                 </p>
             </div>
 			<div class="content-area w-full text-center p-8">
-            <p class="text-gray-400">&copy; 2025 - cfod.co.uk</p>
-        </div>
+            <p class="text-gray-400">&copy; 2025 - cfod.co.uk</p></div>
         </div>
     </div>
+<div id="lightbox">
+        <span class="lightbox-close">&times;</span>
+        <!-- MODIFIED: Added 1x1 transparent pixel to satisfy linters -->
+        <img id="lightbox-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Enlarged gallery image">
+    </div>
+            
+    <script>
+        // MODIFIED: Wrapped all JS in one DOMContentLoaded listener
+        document.addEventListener('DOMContentLoaded', () => {
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+            const galleryImages = document.querySelectorAll('.gallery-image');
+            const closeButton = document.querySelector('.lightbox-close');
 
+            if (lightbox) {
+                galleryImages.forEach(image => {
+                    image.addEventListener('click', () => {
+                        const imgSrc = image.getAttribute('src');
+                        lightboxImg.setAttribute('src', imgSrc);
+                        lightbox.style.display = 'flex';
+                    });
+                });
+
+                // Function to close the lightbox
+                const closeLightbox = () => {
+                    lightbox.style.display = 'none';
+                    // Reset src to prevent linter issues on hide
+                    lightboxImg.setAttribute('src', 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+                };
+
+                // Close on button click
+                if (closeButton) {
+                    closeButton.addEventListener('click', closeLightbox);
+                }
+                
+                // Close on background click
+                lightbox.addEventListener('click', (e) => {
+                    if (e.target === lightbox) {
+                        closeLightbox();
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
