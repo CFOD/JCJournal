@@ -25,6 +25,21 @@
       .font-title-custom {
         font-family: 'GlacialIndifference-Bold', sans-serif;
       }
+
+      /* Simple transition for the article content */
+      .full-article-content {
+        transition: all 0.3s ease-in-out;
+        overflow: hidden;
+      }
+      
+      /* We can add a max-height transition for a smooth slide */
+      .full-article-content.hidden {
+        max-height: 0;
+      }
+      
+      .full-article-content:not(.hidden) {
+        max-height: 1000px; /* Set to a value larger than any article */
+      }
     </style>
 </head>
 <body class="bg-[#FFFDF3] font-inter text-black">
@@ -76,11 +91,19 @@
                         SUMMARY FOR THE STUPID POINTLESS ARTICLE IN QUESTION
                     </p>
                     <div class="flex items-center space-x-3">
-                        <a href="#" class="bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
+                        <a href="#" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
                             Read More
                         </a>
                         <span class="text-sm text-gray-600">by Connor O'Donnell</span>
                     </div>
+
+                    <!-- Hidden Full Article Content -->
+                    <div class="full-article-content hidden mt-4 text-gray-700 space-y-4">
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                        <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                    </div>
+                    <!-- End Hidden Content -->
+
                 </div>
             </article>
 
@@ -96,11 +119,19 @@
                         REALLY GOOD STUFF, WHAT A GREAT READ!
                     </p>
                     <div class="flex items-center space-x-3">
-                        <a href="#" class="bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
+                        <a href="#" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
                             Read More
                         </a>
                         <span class="text-sm text-gray-600">by Jack Pendry</span>
                     </div>
+
+                    <!-- Hidden Full Article Content -->
+                    <div class="full-article-content hidden mt-4 text-gray-700 space-y-4">
+                        <p>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Donec velit neque, auctor sit amet aliquam vel, ullamcorper sit amet ligula. Curabitur non nulla sit amet nisl tempus convallis quis ac lectus.</p>
+                        <p>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Donec velit neque, auctor sit amet aliquam vel, ullamcorper sit amet ligula. Curabitur non nulla sit amet nisl tempus convallis quis ac lectus.</p>
+                    </div>
+                    <!-- End Hidden Content -->
+
                 </div>
             </article>
 
@@ -126,6 +157,41 @@
                 const dateString = today.toLocaleDateString('en-US', options).toUpperCase();
                 dateElement.textContent = dateString;
             }
+        })();
+
+        // Script for "Read More" buttons
+        (function() {
+            // Get all the "Read More" buttons
+            const readMoreButtons = document.querySelectorAll('.read-more-btn');
+
+            readMoreButtons.forEach(button => {
+                button.addEventListener('click', function(event) {
+                    event.preventDefault(); // Stop the <a> tag from jumping to the top
+
+                    // Find the parent `div` of the button, then the `div` for the full article
+                    const articleDiv = button.closest('article > div');
+                    if (!articleDiv) return;
+
+                    const fullArticle = articleDiv.querySelector('.full-article-content');
+
+                    if (fullArticle) {
+                        // Check if the article is currently hidden
+                        const isHidden = fullArticle.classList.contains('hidden');
+
+                        if (isHidden) {
+                            // Show the article
+                            fullArticle.classList.remove('hidden');
+                            // Change button text
+                            button.textContent = 'Read Less';
+                        } else {
+                            // Hide the article
+                            fullArticle.classList.add('hidden');
+                            // Change button text
+                            button.textContent = 'Read More';
+                        }
+                    }
+                });
+            });
         })();
     </script>
 </body>
