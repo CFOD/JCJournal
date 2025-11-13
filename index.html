@@ -34,8 +34,7 @@
             
             <div class="flex justify-between items-start border-b border-black pb-2 mb-2">
                 <div class="border-2 border-black p-4 text-center font-bold text-xs w-44 uppercase">
-                    ISSUE #001 <br>
-                    NOVEMBER 13, 2025
+					<span id="current-date"></span>
                 </div>
                 <button class="border-2 border-black p-4 text-center font-bold text-xs w-44 uppercase hover:bg-gray-100 transition-colors">
                     SEARCH
@@ -62,12 +61,12 @@
         <main class="max-w-4xl mx-auto">
 
             <article class="mb-10 flex items-start space-x-6">
-                <img src="https://placehold.co/400x300/e2e8f0/333?text=Thumbnail" 
+                <img src="image.jpg" 
                      alt="Placeholder thumbnail for the article" 
                      class="w-48 h-32 object-cover grayscale rounded flex-shrink-0">
                 <div>
                     <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide">
-                        Stupid Pointless Title to a Stupid Pointless Article
+                        There is a non-zero chance this is a TITLE!!
                     </h2>
                     <p class="text-base mb-3 text-gray-800">
                         SUMMARY FOR THE STUPID POINTLESS ARTICLE IN QUESTION
@@ -82,7 +81,7 @@
             </article>
 
             <article class="mb-10 flex items-start space-x-6">
-                <img src="https://placehold.co/400x300/e2e8f0/333?text=Thumbnail" 
+                <img src="banana.png" 
                      alt="Placeholder thumbnail for the article" 
                      class="w-48 h-32 object-cover grayscale rounded flex-shrink-0">
                 <div>
@@ -111,5 +110,19 @@
 
     </div>
 
+	<script>
+        // This script finds the element with the id "current-date" and fills it
+        // with the current date, formatted to match the style (e.g., NOVEMBER 13, 2025).
+        (function() {
+            const dateElement = document.getElementById('current-date');
+            if (dateElement) {
+                const today = new Date();
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                // Using 'en-GB' or 'en-US' as a base, then converting to uppercase
+                const dateString = today.toLocaleDateString('en-US', options).toUpperCase();
+                dateElement.textContent = dateString;
+            }
+        })();
+    </script>
 </body>
 </html>
