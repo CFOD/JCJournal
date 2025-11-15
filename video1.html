@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Video Player</title>
+  <style>
+    /* Remove all default margins and padding */
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      /* Black background for the page */
+      background-color: #000; 
+    }
+    /* Make the video fill the entire browser window */
+    video {
+      width: 100vw; /* 100% of viewport width */
+      height: 100vh; /* 100% of viewport height */
+    }
+  </style>
+</head>
+<body>
+
+  <video controls autoplay>
+    <source src="video1.mov" type="video/mov">
+    Your browser does not support the video tag.
+  </video>
+
+</body>
+</html>
