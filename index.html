@@ -11,6 +11,45 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     
     <style>
+
+
+body.ceo-theme .font-title-custom {
+    color: #00ff99; /* bright neon green */
+    text-shadow:
+        0 0 5px #00ff99,
+        0 0 10px #00ff99,
+        0 0 20px #00ff99,
+        0 0 40px #00ff99,
+        0 0 80px #00ff99,
+        0 0 160px #00ff99;
+}
+body.ceo-theme {
+    background: #000 !important;
+    color: #00ff99 !important;
+  }
+
+  body.ceo-theme h1,
+  body.ceo-theme h2,
+  body.ceo-theme p {
+    color: #00ff99 !important;
+  }
+
+  body.ceo-theme img {
+    filter: brightness(1.2) contrast(1.2);
+    box-shadow: 0 0 20px #00ff99;
+  }
+
+  #themeToggle {
+    background: #222;
+    color: #00ff99;
+    padding: 8px 16px;
+    border: 1px solid #00ff99;
+  }
+
+  body.ceo-theme #themeToggle {
+    background: #00ff99;
+    color: #000;
+  }
       @font-face {
         font-family: 'GlacialIndifference-Bold';
         src: url('fonts/GlacialIndifference-Bold.otf') format('opentype');
@@ -63,7 +102,7 @@
             <div class="border-b border-red-500 my-1"></div> 
             <div class="border-b border-black mb-4"></div>
 
-
+            <button id="themeToggle">Activate CEO Mode</button>
             <p class="text-center text-sm mb-4 max-w-4xl mx-auto">
                 Most of important text writings and topical tanigble talking musings about with which the world is revolve. Truth is the most it important of all knowledge.
             </p>
@@ -317,6 +356,13 @@
                 }
             });
         })();
+
+      
+    document.getElementById("themeToggle").addEventListener("click", function () {
+      document.body.classList.toggle("ceo-theme");
+    });
+
     </script>
 </body>
 </html>
+

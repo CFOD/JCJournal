@@ -3,6 +3,11 @@
   src: url('fonts/GlacialIndifference-Bold.otf') format('truetype');
 }
 
+@font-face {
+  font-family: 'CEOFont';
+  src: url('fonts/Tovar.otf') format('opentype');
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -230,4 +235,35 @@ body {
 /* Hidden content */
 .hidden {
   display: none !important;
+}
+
+.ceo-theme {
+  background: red;
+  color: brown;
+  font-family: 'Tovar.otf'
+}
+
+/* Make images glow in CEO mode */
+.ceo-theme img {
+  filter: grayscale(0) brightness(1.4) contrast(1.2);
+  box-shadow: 0 0 30px #4caf50, 0 0 60px #00ff88;
+  transition: all 0.5s ease;
+}
+
+/* Maybe make the page wobble slightly for drama */
+.ceo-theme {
+  animation: ceo-shift 0.5s ease;
+}
+
+@keyframes ceo-shift {
+  0% { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+
+/* Transform the button itself */
+.ceo-theme #themeToggle {
+  background: #00ff88;
+  color: black;
+  border: none;
+  box-shadow: 0 0 20px #00ff88;
 }
