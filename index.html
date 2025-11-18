@@ -419,14 +419,6 @@
             });
         }
 
-        // --- Helper: Seed Database ---
-        async function seedDatabase(ref) {
-            console.log("Seeding database...");
-            // Short timeout to ensure we don't flood or race condition
-            await new Promise(resolve => setTimeout(resolve, 1000));
-           
-            }
-
         // --- Event Listeners ---
         searchInput.addEventListener('input', () => {
             displayedCount = 5; 
