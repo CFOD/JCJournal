@@ -228,10 +228,6 @@
                 });
 
                 // Auto-seed only if empty and we have the function
-                if (allArticles.length === 0) {
-                    await seedDatabase(articlesRef);
-                    return; 
-                }
 
                 // Sort newest first
                 allArticles.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
