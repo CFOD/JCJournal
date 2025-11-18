@@ -98,7 +98,7 @@
         <main id="main-content" class="max-w-4xl mx-auto flex-1 overflow-y-auto w-full relative">
             <!-- Content is injected here by JavaScript -->
             <div class="loader"></div>
-            <p class="text-center text-sm text-gray-500">Connecting to database...</p>
+            <p id="status-msg" class="text-center text-sm text-gray-500">Connecting to database...</p>
         </main>
 
         <footer class="border-t border-black pt-6 mt-12 text-center flex-shrink-0">
@@ -114,30 +114,33 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Configuration ---
-        // Using the environment provided configuration
-        const firebaseConfig = {
-  			apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
-  			authDomain: "jc-journal.firebaseapp.com",
-  			projectId: "jc-journal",
-  			storageBucket: "jc-journal.firebasestorage.app",
-  			messagingSenderId: "931803753012",
-  			appId: "1:931803753012:web:6fc075b16e11bf760ff861"
-		};
+        // If running in the chat preview, we use the environment config.
+        // If running LOCALLY (on your VPS), we use the object below.
+        // PASTE YOUR FIREBASE KEYS INTO THE OBJECT BELOW.
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : {
+                apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
+  				authDomain: "jc-journal.firebaseapp.com",
+  				projectId: "jc-journal",
+  				storageBucket: "jc-journal.firebasestorage.app",
+  				messagingSenderId: "931803753012",
+  				appId: "1:931803753012:web:6fc075b16e11bf760ff861"
+            };
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        // Use the provided app ID for the path, or a default fallback
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'jc-journal-default';
 
         // --- State ---
-        let allArticles = []; // Store all fetched articles here
-        let displayedCount = 5; // How many are currently shown (Lazy Load)
+        let allArticles = []; 
+        let displayedCount = 5; 
         let user = null;
-        let currentView = 'home'; // 'home', 'article', 'submit'
+        let currentView = 'home'; 
 
         // --- DOM Elements ---
         const mainContent = document.getElementById('main-content');
@@ -151,11 +154,24 @@
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             dateElement.textContent = today.toLocaleDateString('en-US', options).toUpperCase();
 
-            // 2. Authenticate (Required for Firebase)
-            // We use anonymous auth so anyone can read/write without a complex login for now
-            await signInAnonymously(auth);
+            // 2. Authenticate
+            try {
+                // If in chat preview, use special token
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    // If on VPS/Local, use Anonymous Auth
+                    // NOTE: Enable "Anonymous" sign-in method in Firebase Console -> Authentication
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Auth Error:", error);
+                const statusMsg = document.getElementById('status-msg');
+                if(statusMsg) statusMsg.innerHTML = `Authentication failed.<br>Check console for details.<br>(${error.code})`;
+                return;
+            }
 
-            // 3. Auth Listener & Data Fetch
+            // 3. Auth Listener
             onAuthStateChanged(auth, (u) => {
                 user = u;
                 if (user) {
@@ -164,9 +180,9 @@
                 }
             });
 
-            // 4. Handle Routing (Back button, etc)
+            // 4. Handle Routing
             window.addEventListener('hashchange', handleRouting);
-            handleRouting(); // Initial check
+            handleRouting(); 
         }
 
         // --- Routing System ---
@@ -174,41 +190,53 @@
             const hash = window.location.hash;
             if (hash === '' || hash === '#') {
                 currentView = 'home';
-                // Reset scroll to top when going home
                 if (mainContent) mainContent.scrollTop = 0;
-                renderHome();
+                if (allArticles.length > 0) renderHome();
             } else if (hash === '#submit') {
                 currentView = 'submit';
                 renderSubmitForm();
             } else if (hash.startsWith('#article/')) {
                 currentView = 'article';
                 const articleId = hash.split('/')[1];
-                renderArticleDetail(articleId);
+                if (allArticles.length > 0) renderArticleDetail(articleId);
             }
         }
 
         // --- Data Management ---
         function setupDataListener() {
-            // Using the strict path format required for this environment
-            const articlesRef = collection(db, 'articles');
+            // Use simple 'articles' collection for local/VPS usage
+            // Use 'artifacts' path for chat environment compatibility
+            let collectionPath = 'articles';
+            if (typeof __app_id !== 'undefined') {
+                 // We are in chat environment, use strict path
+                 // This logic allows the code to run in BOTH places
+            }
             
-            // Real-time listener for ALL articles
+            // For simplicity in this hybrid file, we will determine the reference dynamically
+            let articlesRef;
+            if (typeof __app_id !== 'undefined') {
+                articlesRef = collection(db, 'artifacts', __app_id, 'public', 'data', 'articles');
+            } else {
+                // YOUR VPS/LOCAL PATH
+                articlesRef = collection(db, 'articles');
+            }
+            
             onSnapshot(articlesRef, async (snapshot) => {
                 allArticles = [];
                 snapshot.forEach((doc) => {
                     allArticles.push({ id: doc.id, ...doc.data() });
                 });
 
-                // If database is empty, seed it with your 6 demo articles
+                // Auto-seed only if empty and we have the function
                 if (allArticles.length === 0) {
                     await seedDatabase(articlesRef);
                     return; 
                 }
 
-                // Sort by date (created at) descending (Newest first)
+                // Sort newest first
                 allArticles.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
-                // Re-render if we are on the home screen or article screen
+                // Re-render current view
                 if (currentView === 'home') {
                     renderHome();
                 } else if (currentView === 'article') {
@@ -218,34 +246,28 @@
                 }
             }, (error) => {
                 console.error("Error fetching articles:", error);
-                mainContent.innerHTML = `<div class="text-center text-red-500 mt-10">Error connecting to the news database.<br>Please refresh the page.</div>`;
+                mainContent.innerHTML = `<div class="text-center text-red-500 mt-10">Error connecting to database.<br>Check your Firebase Config and Firestore Rules.</div>`;
             });
         }
 
-        // --- View: Home (List with Lazy Load) ---
+        // --- View: Home ---
         function renderHome() {
             const searchTerm = searchInput.value.toLowerCase();
-            
-            // 1. Filter
             const filteredArticles = allArticles.filter(a => 
                 (a.title && a.title.toLowerCase().includes(searchTerm)) || 
                 (a.summary && a.summary.toLowerCase().includes(searchTerm))
             );
 
-            // 2. Slice for Lazy Loading
             const articlesToShow = filteredArticles.slice(0, displayedCount);
             
-            // 3. Render
             if (articlesToShow.length === 0 && allArticles.length > 0) {
-                mainContent.innerHTML = `<div class="text-center py-10 text-xl font-bold">No articles found matching "${searchInput.value}".</div>`;
+                mainContent.innerHTML = `<div class="text-center py-10 text-xl font-bold">No articles found.</div>`;
                 return;
             }
 
             let html = `<div class="fade-in space-y-10">`;
 
             articlesToShow.forEach(article => {
-                // Determine grayscale based on index or stored property if you prefer
-                // For now, let's randomise or use the property if it exists
                 const isGrayscale = article.isGrayscale !== undefined ? article.isGrayscale : true;
                 
                 html += `
@@ -275,7 +297,6 @@
                 `;
             });
 
-            // 4. Loading Indicator (for Lazy Load)
             if (articlesToShow.length < filteredArticles.length) {
                 html += `<div id="scroll-trigger" class="text-center text-gray-500 py-8 font-bold">Scroll for more...</div>`;
             }
@@ -289,11 +310,10 @@
             const article = allArticles.find(a => a.id === id);
             
             if (!article) {
-                mainContent.innerHTML = `<div class="text-center mt-20">Article not found (ID: ${id}). <a href="#" class="underline">Go Home</a></div>`;
+                mainContent.innerHTML = `<div class="text-center mt-20">Loading article...</div>`;
                 return;
             }
 
-            // Simple formatting: replace newlines with <p>
             const paragraphs = article.content 
                 ? article.content.split('\n').map(p => p.trim()).filter(p => p).map(p => `<p class="mb-4">${p}</p>`).join('')
                 : '<p>No content.</p>';
@@ -373,7 +393,13 @@
                 btn.disabled = true;
 
                 try {
-                    const collectionRef = collection(db, 'articles');
+                    // Dynamic Collection Reference (Chat vs Local)
+                    let collectionRef;
+                    if (typeof __app_id !== 'undefined') {
+                         collectionRef = collection(db, 'artifacts', __app_id, 'public', 'data', 'articles');
+                    } else {
+                         collectionRef = collection(db, 'articles');
+                    }
                     
                     await addDoc(collectionRef, {
                         title: document.getElementById('title').value,
@@ -382,25 +408,27 @@
                         summary: document.getElementById('summary').value,
                         content: document.getElementById('content').value,
                         createdAt: Date.now(),
-                        submitterId: user.uid, // Track who uploaded it
-                        isGrayscale: true // Default style
+                        submitterId: user.uid, 
+                        isGrayscale: true 
                     });
                     
-                    // Success
                     alert("Article Published Successfully!");
-                    window.location.hash = ''; // Return home
+                    window.location.hash = ''; 
                 } catch (error) {
                     console.error("Error submitting:", error);
-                    alert("Something went wrong. Check the console.");
+                    alert(`Error: ${error.code || error.message}`);
                     btn.textContent = originalText;
                     btn.disabled = false;
                 }
             });
         }
 
-        // --- Helper: Seed Database with Demo Data ---
+        // --- Helper: Seed Database ---
         async function seedDatabase(ref) {
-            console.log("Seeding database with initial articles...");
+            console.log("Seeding database...");
+            // Short timeout to ensure we don't flood or race condition
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
             const demos = [
                  { title: "The Sixth Article (Lazy Loaded)", author: "I. M. Hidden", imageUrl: "https://placehold.co/192x128/cccccc/000000?text=Image+6&font=inter", summary: "This article will load when you scroll down.", content: "This is the content for the 6th article. It loaded dynamically!", isGrayscale: true },
                  { title: "Article Number Five", author: "A. Person", imageUrl: "https://placehold.co/192x128/000000/ffffff?text=Image+5&font=inter", summary: "This is the last of the initially loaded articles.", content: "Quisque velit nisi, pretium ut lacinia in.", isGrayscale: false },
@@ -411,21 +439,17 @@
             ];
 
             for (let i = 0; i < demos.length; i++) {
-                // Add delay to preserve order
-                await new Promise(r => setTimeout(r, 100)); 
+                await new Promise(r => setTimeout(r, 200)); 
                 await addDoc(ref, { ...demos[i], createdAt: Date.now() - (i * 100000) });
             }
         }
 
         // --- Event Listeners ---
-        
-        // Live Search
         searchInput.addEventListener('input', () => {
             displayedCount = 5; 
             if (currentView === 'home') renderHome();
         });
 
-        // Infinite Scroll
         mainContent.addEventListener('scroll', () => {
             if (currentView !== 'home') return;
 
@@ -434,13 +458,9 @@
                 const triggerTop = scrollTrigger.getBoundingClientRect().top;
                 const containerBottom = mainContent.getBoundingClientRect().bottom;
 
-                // If trigger is visible or close to visible
                 if (triggerTop < containerBottom + 100) {
-                    // Debounce slightly
+                    // Debounce/limit updates
                     if (displayedCount < allArticles.length) {
-                         // Add a small visual delay to feel like "loading"
-                         // Note: If data is already local, this is instantaneous, so we fake a tiny delay for UX
-                         // or just update immediately. Let's update immediately for responsiveness.
                          displayedCount += 5; 
                          renderHome();
                     }
@@ -448,7 +468,6 @@
             }
         });
 
-        // Start
         init();
     </script>
 </body>
