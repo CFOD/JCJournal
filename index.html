@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AC Journal</title>
+    <title>JC Journal</title>
     <link rel="icon" type="image/x-icon" href="icon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    
     <style>
       @font-face {
         font-family: 'GlacialIndifference-Bold';
@@ -33,22 +34,46 @@
       main::-webkit-scrollbar {
         display: none; /* Chrome, Safari and Opera */
       }
+      
+      /* Simple fade in for views */
+      .fade-in {
+          animation: fadeIn 0.5s;
+      }
+      @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+      }
+
+      /* Loading spinner */
+      .loader {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #000;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
     </style>
 </head>
 <body class="bg-[#FFFDF3] font-inter text-black h-screen overflow-hidden flex flex-col">
 
     <div class="container mx-auto p-4 sm:p-8 max-w-6xl flex flex-col h-full">
 
-        <header class="mb-8">
+        <header class="mb-8 flex-shrink-0">
             
             <div class="flex justify-between items-center border-black pb-2 mb-2">
                 <!-- Responsive Date Box -->
-                <div class="border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-28 sm:w-44 uppercase">
+                <div class="border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-28 sm:w-44 uppercase cursor-pointer" onclick="window.location.hash=''">
                     <span id="current-date"></span>
                 </div>
                 
-                <!-- Responsive Title -->
-                <h1 class="font-title-custom text-center text-5xl md:text-7xl lg:text-9xl uppercase mx-2 sm:mx-4">
+                <!-- Responsive Title - Clicks go Home -->
+                <h1 class="font-title-custom text-center text-5xl md:text-7xl lg:text-9xl uppercase mx-2 sm:mx-4 cursor-pointer" onclick="window.location.hash=''">
                         JCJournal
                 </h1>
                 
@@ -56,11 +81,11 @@
                 <input type="text" id="search-input" placeholder="SEARCH" class="border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-28 sm:w-44 uppercase bg-transparent focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
             </div>
 
-
-
             <div class="border-b border-black"></div>
             <div class="border-b border-red-500 my-1"></div> 
             <div class="border-b border-black mb-4"></div>
+
+
             <p class="text-center text-sm mb-4 max-w-4xl mx-auto">
                 Most of important text writings and topical tanigble talking musings about with which the world is revolve. Truth is the most it important of all knowledge.
             </p>
@@ -69,252 +94,362 @@
 
         </header>
 
-        <main id="article-list" class="max-w-4xl mx-auto flex-1 overflow-y-auto w-full">
-
-            <!-- Responsive Article Layout: Stacks on mobile, row on desktop -->
-            <article class="mb-10 flex flex-col sm:flex-row items-start">
-                <!-- Image links to article page -->
-                <a href="video1.html" class="flex-shrink-0 w-full sm:w-48">
-                    <img src="image.jpg" 
-                         alt="Placeholder thumbnail for the article" 
-                         class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0">
-                </a>
-                <div class="sm:ml-6 w-full">
-                    <!-- Title links to article page -->
-                    <a href="video1.html">
-                        <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors">
-                            There is a non-zero chance this is a TITLE!!
-                        </h2>
-                    </a>
-                    <p class="text-base mb-3 text-gray-800">
-                        SUMMARY FOR THE STUPID POINTLESS ARTICLE IN QUESTION
-                    </p>
-                    <div class="flex items-center space-x-3">
-                        <!-- Button links to article page -->
-                        <a href="video1.html" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
-                            Read More
-                        </a>
-                        <span class="text-sm text-gray-600">by Connor O'Donnell</span>
-                    </div>
-                </div>
-            </article>
-
-            <article class="mb-10 flex flex-col sm:flex-row items-start">
-                <a href="https://skyteamvirtual.org/pilots/01e6f7p2n0g5c09wa0ree9y4f2" class="flex-shrink-0 w-full sm:w-48">
-                    <img src="banana.png" 
-                         alt="Placeholder thumbnail for the article" 
-                         class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0">
-                </a>
-                <div class="sm:ml-6 w-full">
-                    <a href="https://skyteamvirtual.org/pilots/01e6f7p2n0g5c09wa0ree9y4f2">
-                        <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors">
-                            Fantastic Piece of Writing
-                        </h2>
-                    </a>
-                    <p class="text-base mb-3 text-gray-800">
-                        REALLY GOOD STUFF, WHAT A GREAT READ!
-                    </p>
-                    <div class="flex items-center space-x-3">
-                        <a href="article-2.html" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
-                            Read More
-                        </a>
-                        <span class="text-sm text-gray-600">by Jack Pendry</span>
-                    </div>
-                </div>
-            </article>
-
-            <article class="mb-10 flex flex-col sm:flex-row items-start">
-                <a href="article-3.html" class="flex-shrink-0 w-full sm:w-48">
-                    <img src="spongebob.jpg" 
-                         alt="Placeholder thumbnail for the article" 
-                         class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0">
-                </a>
-                <div class="sm:ml-6 w-full">
-                    <a href="article-3.html">
-                        <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors">
-                            A Third Article Appears
-                        </h2>
-                    </a>
-                    <p class="text-base mb-3 text-gray-800">
-                        This one is also just a placeholder, but it helps with scrolling.
-                    </p>
-                    <div class="flex items-center space-x-3">
-                        <a href="article-3.html" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
-                            Read More
-                        </a>
-                        <span class="text-sm text-gray-600">by Jane Doe</span>
-                    </div>
-                </div>
-            </article>
-
-            <article class="mb-10 flex flex-col sm:flex-row items-start">
-                <a href="article-4.html" class="flex-shrink-0 w-full sm:w-48">
-                    <img src="yeah.png" 
-                         alt="Placeholder thumbnail for the article" 
-                         class="w-full h-48 sm:h-32 object-cover grayscale rounded mb-4 sm:mb-0">
-                </a>
-                <div class="sm:ml-6 w-full">
-                    <a href="article-4.html">
-                        <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors">
-                            The Fourth Title
-                        </h2>
-                    </a>
-                    <p class="text-base mb-3 text-gray-800">
-                        Another summary to fill the space and ensure the scrollbar is visible on load.
-                    </p>
-                    <div class="flex items-center space-x-3">
-                        <a href="article-4.html" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
-                            Read More
-                        </a>
-                        <span class="text-sm text-gray-600">by John Smith</span>
-                    </div>
-                </div>
-            </article>
-
-            <article class="mb-10 flex flex-col sm:flex-row items-start">
-                <a href="article-5.html" class="flex-shrink-0 w-full sm:w-48">
-                    <img src="michaelwave.jpg" 
-                         alt="Placeholder thumbnail for the article" 
-                         class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0">
-                </a>
-                <div class="sm:ml-6 w-full">
-                    <a href="article-5.html">
-                        <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors">
-                            Article Number Five
-                        </h2>
-                    </a>
-                    <p class="text-base mb-3 text-gray-800">
-                        This is the last of the initially loaded articles.
-                    </p>
-                    <div class="flex items-center space-x-3">
-                        <a href="article-5.html" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
-                            Read More
-                        </a>
-                        <span class="text-sm text-gray-600">by A. Person</span>
-                    </div>
-                </div>
-            </article>
-
-            <!-- HIDDEN ARTICLE 6 - Ready to be loaded by script -->
-            <article class="mb-10 flex flex-col sm:flex-row items-start hidden hidden-article">
-                <a href="article-6.html" class="flex-shrink-0 w-full sm:w-48">
-                    <img src="image.gif" 
-                         alt="Placeholder thumbnail for the article" 
-                         class="w-full h-48 sm:h-32 object-cover grayscale rounded mb-4 sm:mb-0">
-                </a>
-                <div class="sm:ml-6 w-full">
-                    <a href="article-6.html">
-                        <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors">
-                            The Sixth Article (Lazy Loaded)
-                        </h2>
-                    </a>
-                    <p class="text-base mb-3 text-gray-800">
-                        This article was hidden on load, but the script revealed it when you scrolled.
-                    </p>
-                    <div class="flex items-center space-x-3">
-                        <a href="article-6.html" class="read-more-btn bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
-                            Read More
-                        </a>
-                        <span class="text-sm text-gray-600">by I. M. Hidden</span>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Loading Indicator -->
-            <div id="loading-indicator" class="text-center text-gray-500 py-4 hidden">
-                Loading...
-            </div>
-
+        <!-- DYNAMIC CONTENT AREA -->
+        <main id="main-content" class="max-w-4xl mx-auto flex-1 overflow-y-auto w-full relative">
+            <!-- Content is injected here by JavaScript -->
+            <div class="loader"></div>
+            <p class="text-center text-sm text-gray-500">Connecting to database...</p>
         </main>
 
-        <footer class="border-t border-black pt-6 mt-12 text-center">
+        <footer class="border-t border-black pt-6 mt-12 text-center flex-shrink-0">
             <p class="text-xs text-gray-600 uppercase">
-                © 2025 JCJournal. All Rights Reserved.
+                © 2025 JCJournal. All Rights Reserved. 
+                <span class="mx-2">|</span> 
+                <a href="#submit" class="hover:text-red-500 transition-colors font-bold">Submit Article</a>
             </p>
         </footer>
 
     </div>
 
-    <script>
-        // Script for Auto-Date
-        (function() {
-            const dateElement = document.getElementById('current-date');
-            if (dateElement) {
-                const today = new Date();
-                const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                const dateString = today.toLocaleDateString('en-US', options).toUpperCase();
-                dateElement.textContent = dateString;
-            }
-        })();
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Script for live search
-        (function() {
-            const searchInput = document.getElementById('search-input');
-            const articleList = document.getElementById('article-list');
+        // --- Configuration ---
+        // Using the environment provided configuration
+        const firebaseConfig = {
+  			apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
+  			authDomain: "jc-journal.firebaseapp.com",
+  			projectId: "jc-journal",
+  			storageBucket: "jc-journal.firebasestorage.app",
+  			messagingSenderId: "931803753012",
+  			appId: "1:931803753012:web:6fc075b16e11bf760ff861"
+		};
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        // Use the provided app ID for the path, or a default fallback
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'jc-journal-default';
 
-            searchInput.addEventListener('input', function(event) {
-                const searchTerm = event.target.value.toLowerCase();
-                // Get all articles that are direct children of the list
-                const articles = articleList.querySelectorAll('article'); 
+        // --- State ---
+        let allArticles = []; // Store all fetched articles here
+        let displayedCount = 5; // How many are currently shown (Lazy Load)
+        let user = null;
+        let currentView = 'home'; // 'home', 'article', 'submit'
 
-                articles.forEach(article => {
-                    const title = article.querySelector('h2').textContent.toLowerCase();
-                    const summary = article.querySelector('p').textContent.toLowerCase();
-                    const articleText = title + ' ' + summary;
+        // --- DOM Elements ---
+        const mainContent = document.getElementById('main-content');
+        const dateElement = document.getElementById('current-date');
+        const searchInput = document.getElementById('search-input');
 
-                    // Only apply search logic to non-lazy-loaded articles
-                    // or let lazy-load logic handle their visibility
-                    if (!article.classList.contains('hidden-article')) {
-                        if (articleText.includes(searchTerm)) {
-                            article.classList.remove('hidden');
-                        } else {
-                            article.classList.add('hidden');
-                        }
-                    } else if (article.classList.contains('hidden-article') && !article.classList.contains('hidden')) {
-                        // If the article is lazy-loaded AND visible, search it
-                         if (articleText.includes(searchTerm)) {
-                            article.classList.remove('hidden');
-                        } else {
-                            article.classList.add('hidden');
-                        }
-                    }
-                });
-            });
-        })();
+        // --- Initialization ---
+        async function init() {
+            // 1. Set Date
+            const today = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            dateElement.textContent = today.toLocaleDateString('en-US', options).toUpperCase();
 
-        // Script for Lazy Loading hidden articles
-        (function() {
-            const mainContent = document.getElementById('article-list');
-            const loadingIndicator = document.getElementById('loading-indicator');
-            let isLoading = false;
+            // 2. Authenticate (Required for Firebase)
+            // We use anonymous auth so anyone can read/write without a complex login for now
+            await signInAnonymously(auth);
 
-            mainContent.addEventListener('scroll', () => {
-                if (isLoading) return; // Prevent multiple loads at once
-
-                // Check if scrolled to near the bottom
-                const isNearBottom = mainContent.scrollHeight - mainContent.scrollTop - mainContent.clientHeight < 200;
-
-                if (isNearBottom) {
-                    const nextHiddenArticle = mainContent.querySelector('.hidden-article');
-
-                    if (nextHiddenArticle) {
-                        isLoading = true;
-                        loadingIndicator.classList.remove('hidden');
-
-                        // Simulate a network delay
-                        setTimeout(() => {
-                            // Reveal the next article
-                            nextHiddenArticle.classList.remove('hidden');
-                            nextHiddenArticle.classList.remove('hidden-article'); // Remove a class so we find the *next* one
-                            
-                            loadingIndicator.classList.add('hidden');
-                            isLoading = false;
-                        }, 500); // 0.5 second delay
-                    }
+            // 3. Auth Listener & Data Fetch
+            onAuthStateChanged(auth, (u) => {
+                user = u;
+                if (user) {
+                    console.log("Authenticated as:", user.uid);
+                    setupDataListener();
                 }
             });
-        })();
+
+            // 4. Handle Routing (Back button, etc)
+            window.addEventListener('hashchange', handleRouting);
+            handleRouting(); // Initial check
+        }
+
+        // --- Routing System ---
+        function handleRouting() {
+            const hash = window.location.hash;
+            if (hash === '' || hash === '#') {
+                currentView = 'home';
+                // Reset scroll to top when going home
+                if (mainContent) mainContent.scrollTop = 0;
+                renderHome();
+            } else if (hash === '#submit') {
+                currentView = 'submit';
+                renderSubmitForm();
+            } else if (hash.startsWith('#article/')) {
+                currentView = 'article';
+                const articleId = hash.split('/')[1];
+                renderArticleDetail(articleId);
+            }
+        }
+
+        // --- Data Management ---
+        function setupDataListener() {
+            // Using the strict path format required for this environment
+            const articlesRef = collection(db, 'articles');
+            
+            // Real-time listener for ALL articles
+            onSnapshot(articlesRef, async (snapshot) => {
+                allArticles = [];
+                snapshot.forEach((doc) => {
+                    allArticles.push({ id: doc.id, ...doc.data() });
+                });
+
+                // If database is empty, seed it with your 6 demo articles
+                if (allArticles.length === 0) {
+                    await seedDatabase(articlesRef);
+                    return; 
+                }
+
+                // Sort by date (created at) descending (Newest first)
+                allArticles.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+                // Re-render if we are on the home screen or article screen
+                if (currentView === 'home') {
+                    renderHome();
+                } else if (currentView === 'article') {
+                    const hash = window.location.hash;
+                    const articleId = hash.split('/')[1];
+                    renderArticleDetail(articleId);
+                }
+            }, (error) => {
+                console.error("Error fetching articles:", error);
+                mainContent.innerHTML = `<div class="text-center text-red-500 mt-10">Error connecting to the news database.<br>Please refresh the page.</div>`;
+            });
+        }
+
+        // --- View: Home (List with Lazy Load) ---
+        function renderHome() {
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            // 1. Filter
+            const filteredArticles = allArticles.filter(a => 
+                (a.title && a.title.toLowerCase().includes(searchTerm)) || 
+                (a.summary && a.summary.toLowerCase().includes(searchTerm))
+            );
+
+            // 2. Slice for Lazy Loading
+            const articlesToShow = filteredArticles.slice(0, displayedCount);
+            
+            // 3. Render
+            if (articlesToShow.length === 0 && allArticles.length > 0) {
+                mainContent.innerHTML = `<div class="text-center py-10 text-xl font-bold">No articles found matching "${searchInput.value}".</div>`;
+                return;
+            }
+
+            let html = `<div class="fade-in space-y-10">`;
+
+            articlesToShow.forEach(article => {
+                // Determine grayscale based on index or stored property if you prefer
+                // For now, let's randomise or use the property if it exists
+                const isGrayscale = article.isGrayscale !== undefined ? article.isGrayscale : true;
+                
+                html += `
+                <article class="flex flex-col sm:flex-row items-start border-b border-gray-200 pb-10 last:border-0">
+                    <a href="#article/${article.id}" class="flex-shrink-0 w-full sm:w-48 cursor-pointer">
+                        <img src="${article.imageUrl || 'https://placehold.co/192x128/cccccc/000000?text=No+Image&font=inter'}" 
+                             alt="Thumbnail" 
+                             class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0 ${isGrayscale ? 'grayscale' : ''} hover:grayscale-0 transition-all duration-300">
+                    </a>
+                    <div class="sm:ml-6 w-full">
+                        <a href="#article/${article.id}">
+                            <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors cursor-pointer hover:text-gray-600">
+                                ${article.title || 'Untitled Article'}
+                            </h2>
+                        </a>
+                        <p class="text-base mb-3 text-gray-800">
+                            ${article.summary || 'No summary available.'}
+                        </p>
+                        <div class="flex items-center space-x-3">
+                            <a href="#article/${article.id}" class="bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
+                                Read More
+                            </a>
+                            <span class="text-sm text-gray-600">by ${article.author || 'Unknown'}</span>
+                        </div>
+                    </div>
+                </article>
+                `;
+            });
+
+            // 4. Loading Indicator (for Lazy Load)
+            if (articlesToShow.length < filteredArticles.length) {
+                html += `<div id="scroll-trigger" class="text-center text-gray-500 py-8 font-bold">Scroll for more...</div>`;
+            }
+
+            html += `</div>`;
+            mainContent.innerHTML = html;
+        }
+
+        // --- View: Article Detail ---
+        function renderArticleDetail(id) {
+            const article = allArticles.find(a => a.id === id);
+            
+            if (!article) {
+                mainContent.innerHTML = `<div class="text-center mt-20">Article not found (ID: ${id}). <a href="#" class="underline">Go Home</a></div>`;
+                return;
+            }
+
+            // Simple formatting: replace newlines with <p>
+            const paragraphs = article.content 
+                ? article.content.split('\n').map(p => p.trim()).filter(p => p).map(p => `<p class="mb-4">${p}</p>`).join('')
+                : '<p>No content.</p>';
+
+            mainContent.innerHTML = `
+                <div class="fade-in pb-20">
+                    <a href="#" class="inline-block mb-6 text-sm font-bold uppercase border-b border-black hover:text-red-500">← Back to Home</a>
+                    
+                    <h1 class="text-4xl sm:text-6xl font-bold uppercase mb-4 font-title-custom leading-tight">${article.title}</h1>
+                    
+                    <div class="flex items-center space-x-2 text-sm text-gray-600 mb-8 border-b border-black pb-4">
+                        <span class="font-bold text-black uppercase">By ${article.author}</span>
+                        <span>•</span>
+                        <span>${new Date(article.createdAt).toLocaleDateString()}</span>
+                    </div>
+
+                    <img src="${article.imageUrl || 'https://placehold.co/800x400/cccccc/000000?text=No+Image'}" 
+                         class="w-full h-auto max-h-[500px] object-cover mb-8 rounded ${article.isGrayscale ? 'grayscale' : ''}">
+
+                    <div class="prose prose-lg max-w-none font-inter text-gray-800 leading-relaxed">
+                        <p class="font-bold text-xl mb-6 italic">${article.summary}</p>
+                        ${paragraphs}
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- View: Submission Form ---
+        function renderSubmitForm() {
+            mainContent.innerHTML = `
+                <div class="fade-in max-w-2xl mx-auto bg-white p-8 border-2 border-black mb-20">
+                    <h2 class="text-3xl font-bold uppercase mb-6 text-center font-title-custom">Submit New Article</h2>
+                    
+                    <form id="article-form" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase mb-1">Article Title</label>
+                            <input type="text" id="title" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 placeholder-gray-400" placeholder="e.g. THE STATE OF THE WORLD">
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase mb-1">Author Name</label>
+                                <input type="text" id="author" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Your Name">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase mb-1">Image URL</label>
+                                <input type="text" id="imageUrl" placeholder="https://..." class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500">
+                                <p class="text-[10px] text-gray-500 mt-1">Paste a link to an image (Imgur, etc)</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase mb-1">Short Summary</label>
+                            <textarea id="summary" rows="2" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Appears on the homepage..."></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase mb-1">Full Content</label>
+                            <textarea id="content" rows="10" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Write your article here..."></textarea>
+                        </div>
+
+                        <div class="pt-4 flex justify-between items-center">
+                            <a href="#" class="text-sm font-bold uppercase hover:text-red-500">Cancel</a>
+                            <button type="submit" class="bg-black text-white font-bold uppercase py-3 px-8 hover:bg-gray-800 transition-colors">
+                                Publish
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.getElementById('article-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = e.target.querySelector('button');
+                const originalText = btn.textContent;
+                btn.textContent = "Publishing...";
+                btn.disabled = true;
+
+                try {
+                    const collectionRef = collection(db, 'articles');
+                    
+                    await addDoc(collectionRef, {
+                        title: document.getElementById('title').value,
+                        author: document.getElementById('author').value,
+                        imageUrl: document.getElementById('imageUrl').value,
+                        summary: document.getElementById('summary').value,
+                        content: document.getElementById('content').value,
+                        createdAt: Date.now(),
+                        submitterId: user.uid, // Track who uploaded it
+                        isGrayscale: true // Default style
+                    });
+                    
+                    // Success
+                    alert("Article Published Successfully!");
+                    window.location.hash = ''; // Return home
+                } catch (error) {
+                    console.error("Error submitting:", error);
+                    alert("Something went wrong. Check the console.");
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }
+            });
+        }
+
+        // --- Helper: Seed Database with Demo Data ---
+        async function seedDatabase(ref) {
+            console.log("Seeding database with initial articles...");
+            const demos = [
+                 { title: "The Sixth Article (Lazy Loaded)", author: "I. M. Hidden", imageUrl: "https://placehold.co/192x128/cccccc/000000?text=Image+6&font=inter", summary: "This article will load when you scroll down.", content: "This is the content for the 6th article. It loaded dynamically!", isGrayscale: true },
+                 { title: "Article Number Five", author: "A. Person", imageUrl: "https://placehold.co/192x128/000000/ffffff?text=Image+5&font=inter", summary: "This is the last of the initially loaded articles.", content: "Quisque velit nisi, pretium ut lacinia in.", isGrayscale: false },
+                 { title: "The Fourth Title", author: "John Smith", imageUrl: "https://placehold.co/192x128/cccccc/000000?text=Image+4&font=inter", summary: "Another summary to fill the space.", content: "Donec sollicitudin molestie malesuada.", isGrayscale: true },
+                 { title: "A Third Article Appears", author: "Jane Doe", imageUrl: "https://placehold.co/192x128/000000/ffffff?text=Image+3&font=inter", summary: "This one is also just a placeholder.", content: "Praesent sapien massa.", isGrayscale: false },
+                 { title: "Fantastic Piece of Writing", author: "Jack Pendry", imageUrl: "https://placehold.co/192x128/cccccc/000000?text=Image+2&font=inter", summary: "REALLY GOOD STUFF, WHAT A GREAT READ!", content: "Vestibulum ante ipsum primis in faucibus.", isGrayscale: true },
+                 { title: "There is a non-zero chance this is a TITLE!!", author: "Connor O'Donnell", imageUrl: "https://placehold.co/192x128/000000/ffffff?text=Image+1&font=inter", summary: "SUMMARY FOR THE STUPID POINTLESS ARTICLE", content: "Lorem ipsum dolor sit amet.", isGrayscale: false }
+            ];
+
+            for (let i = 0; i < demos.length; i++) {
+                // Add delay to preserve order
+                await new Promise(r => setTimeout(r, 100)); 
+                await addDoc(ref, { ...demos[i], createdAt: Date.now() - (i * 100000) });
+            }
+        }
+
+        // --- Event Listeners ---
+        
+        // Live Search
+        searchInput.addEventListener('input', () => {
+            displayedCount = 5; 
+            if (currentView === 'home') renderHome();
+        });
+
+        // Infinite Scroll
+        mainContent.addEventListener('scroll', () => {
+            if (currentView !== 'home') return;
+
+            const scrollTrigger = document.getElementById('scroll-trigger');
+            if (scrollTrigger) {
+                const triggerTop = scrollTrigger.getBoundingClientRect().top;
+                const containerBottom = mainContent.getBoundingClientRect().bottom;
+
+                // If trigger is visible or close to visible
+                if (triggerTop < containerBottom + 100) {
+                    // Debounce slightly
+                    if (displayedCount < allArticles.length) {
+                         // Add a small visual delay to feel like "loading"
+                         // Note: If data is already local, this is instantaneous, so we fake a tiny delay for UX
+                         // or just update immediately. Let's update immediately for responsiveness.
+                         displayedCount += 5; 
+                         renderHome();
+                    }
+                }
+            }
+        });
+
+        // Start
+        init();
     </script>
 </body>
 </html>
-
