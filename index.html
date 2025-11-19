@@ -291,6 +291,9 @@
         function renderHome() {
             const searchTerm = searchInput.value.toLowerCase();
             const filteredArticles = allArticles.filter(a => 
+														
+			const dateStr = new Date(a.createdAt).toLocaleDateString().toLowerCase();
+				
                 (a.title && a.title.toLowerCase().includes(searchTerm)) || 
                 (a.summary && a.summary.toLowerCase().includes(searchTerm)) ||
                 (a.author && a.author.toLowerCase().includes(searchTerm)) ||
