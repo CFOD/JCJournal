@@ -294,7 +294,8 @@
                 (a.title && a.title.toLowerCase().includes(searchTerm)) || 
                 (a.summary && a.summary.toLowerCase().includes(searchTerm)) ||
                 (a.author && a.author.toLowerCase().includes(searchTerm)) ||
-                (a.content && a.content.toLowerCase().includes(searchTerm))
+                (a.content && a.content.toLowerCase().includes(searchTerm)) ||
+				(dateStr.includes(searchTerm));
             );
 
             const articlesToShow = filteredArticles.slice(0, displayedCount);
