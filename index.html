@@ -129,7 +129,7 @@
      <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // =================================================================
@@ -138,7 +138,7 @@
         // =================================================================
         
         const firebaseConfig = {
-              apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
+  apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
   authDomain: "jc-journal.firebaseapp.com",
   projectId: "jc-journal",
   storageBucket: "jc-journal.firebasestorage.app",
@@ -152,22 +152,18 @@
         
         try {
             if (firebaseConfig.apiKey.includes("PASTE_YOUR")) {
+                document.getElementById('config-error-overlay').style.display = 'flex';
                 throw new Error("Config Placeholder Detected");
             }
             app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             db = getFirestore(app);
+            
+            // Force Persistence
+            setPersistence(auth, browserLocalPersistence).catch(e => console.error("Persistence Error:", e));
+
         } catch (e) {
-             const statusMsg = document.getElementById('status-msg');
-             if(statusMsg) {
-                 statusMsg.innerHTML = `
-                    <span style="color:red; font-weight:bold;">Configuration Missing or Invalid</span><br><br>
-                    1. Open this file in the editor.<br>
-                    2. Scroll to line ~130.<br>
-                    3. Paste your Firebase keys into <code>firebaseConfig</code>.<br>
-                    4. Save and refresh.
-                 `;
-             }
+             console.error(e);
              throw e; 
         }
 
@@ -186,62 +182,67 @@
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             dateElement.textContent = today.toLocaleDateString('en-US', options).toUpperCase();
 
-            // Auth Listener: Source of Truth
+            // 1. Listen for Auth Changes
             onAuthStateChanged(auth, (user) => {
                 currentUser = user;
-                updateFooterState(); // Auto-update footer when state changes
+                updateFooterState(); // Immediate update
                 
                 if (!dataListenerUnsubscribe) {
                     setupDataListener();
                 }
             });
 
+            // 2. Start Routing
             window.addEventListener('hashchange', handleRouting);
-            setTimeout(handleRouting, 100); 
+            handleRouting(); 
+
+            // 3. BRUTE FORCE POLLER
+            // Checks auth state every 500ms and forces footer to match
+            setInterval(() => {
+                updateFooterState();
+            }, 500);
         }
 
-        // Robust footer updater - checks direct auth state
+        // This function controls the footer text
         function updateFooterState() {
             const footerLinks = document.getElementById('footer-links');
             const debugEl = document.getElementById('auth-debug');
-            
             if (!footerLinks) return;
 
-            // Use either the listener variable OR the direct SDK state
-            const user = currentUser || auth.currentUser;
+            // Check the REAL source of truth
+            const user = auth.currentUser;
 
             if (user) {
-                console.log("UI Update: Logged In", user.email);
-                footerLinks.innerHTML = `
-                    © 2025 JCJournal. All Rights Reserved. 
-                    <span class="mx-2">|</span> 
-                    <a href="#submit" class="hover:text-red-500 transition-colors font-bold">Submit Article</a>
-                    <span class="mx-2">|</span> 
-                    <a href="#logout" class="hover:text-red-500 transition-colors">Logout</a>
-                `;
-                if(debugEl) {
-                    debugEl.textContent = `Logged In: ${user.email}`;
-                    debugEl.style.color = "green";
+                // Only update if it doesn't already say Logout (prevents flickering)
+                if (!footerLinks.innerHTML.includes("Logout")) {
+                    console.log("Poller: Updating footer to LOGGED IN");
+                    footerLinks.innerHTML = `
+                        © 2025 JCJournal. All Rights Reserved. 
+                        <span class="mx-2">|</span> 
+                        <a href="#submit" class="hover:text-red-500 transition-colors font-bold">Submit Article</a>
+                        <span class="mx-2">|</span> 
+                        <a href="#logout" class="hover:text-red-500 transition-colors">Logout</a>
+                    `;
                 }
+                if(debugEl) { debugEl.textContent = `User: ${user.email}`; debugEl.style.background = "#dcfce7"; debugEl.style.color="black"; }
             } else {
-                console.log("UI Update: Guest");
-                footerLinks.innerHTML = `
-                    © 2025 JCJournal. All Rights Reserved. 
-                    <span class="mx-2">|</span> 
-                    <a href="#login" class="hover:text-red-500 transition-colors font-bold">Staff Login</a>
-                `;
-                if(debugEl) {
-                    debugEl.textContent = "Guest Mode";
-                    debugEl.style.color = "gray";
+                // Only update if it doesn't already say Staff Login
+                if (!footerLinks.innerHTML.includes("Staff Login")) {
+                    console.log("Poller: Updating footer to GUEST");
+                    footerLinks.innerHTML = `
+                        © 2025 JCJournal. All Rights Reserved. 
+                        <span class="mx-2">|</span> 
+                        <a href="#login" class="hover:text-red-500 transition-colors font-bold">Staff Login</a>
+                    `;
                 }
+                if(debugEl) { debugEl.textContent = "Guest Mode"; debugEl.style.background = "#f3f4f6"; debugEl.style.color="black"; }
             }
         }
 
         function handleRouting() {
             const hash = window.location.hash;
             
-            // Force check on every route change
-            updateFooterState();
+            // Note: Footer update is now handled by Poller/AuthListener, not Routing
 
             if (hash === '' || hash === '#') {
                 currentView = 'home';
@@ -251,8 +252,7 @@
                 currentView = 'login';
                 renderLoginForm();
             } else if (hash === '#submit') {
-                const user = currentUser || auth.currentUser;
-                if (!user) { 
+                if (!auth.currentUser) { 
                     window.location.hash = '#login'; 
                     return; 
                 }
@@ -266,6 +266,7 @@
                 signOut(auth).then(() => { 
                     currentUser = null;
                     window.location.hash = ''; 
+                    // Footer will update via Poller
                 });
             }
         }
@@ -348,7 +349,9 @@
                 html += `
                 <article class="flex flex-col sm:flex-row items-start border-b border-gray-200 pb-10 last:border-0">
                     <a href="#article/${article.id}" class="flex-shrink-0 w-full sm:w-48 cursor-pointer">
-                        <img src="${article.imageUrl || 'https://placehold.co/192x128/cccccc/000000?text=No+Image&font=inter'}" class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0 ${isGrayscale ? 'grayscale' : ''} hover:grayscale-0 transition-all duration-300">
+                        <img src="${article.imageUrl || 'https://placehold.co/192x128/cccccc/000000?text=No+Image&font=inter'}" 
+                             alt="Thumbnail" 
+                             class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0 ${isGrayscale ? 'grayscale' : ''} hover:grayscale-0 transition-all duration-300">
                     </a>
                     <div class="sm:ml-6 w-full">
                         <a href="#article/${article.id}"><h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors cursor-pointer hover:text-gray-600">${article.title || 'Untitled Article'}</h2></a>
@@ -385,12 +388,11 @@
         }
         
         function renderLoginForm() {
-            const user = currentUser || auth.currentUser;
-            if (user) {
+            if (auth.currentUser) {
                  mainContent.innerHTML = `
                     <div class="fade-in max-w-md mx-auto bg-white p-8 border-2 border-black mb-20 mt-10 text-center">
                         <h2 class="text-2xl font-bold uppercase mb-4 font-title-custom">You are logged in</h2>
-                        <p class="mb-6">Welcome, ${user.email}</p>
+                        <p class="mb-6">Welcome, ${auth.currentUser.email}</p>
                         <a href="#submit" class="block w-full bg-black text-white font-bold uppercase py-3 px-8 hover:bg-gray-800 transition-colors mb-4">Submit Article</a>
                         <a href="#" class="block w-full border-2 border-black text-black font-bold uppercase py-3 px-8 hover:bg-gray-100 transition-colors">Go Home</a>
                     </div>
@@ -411,16 +413,9 @@
             document.getElementById('login-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 try {
-                    const userCredential = await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
-                    
-                    // FIX: Immediately update state variables and UI
-                    currentUser = userCredential.user;
-                    updateFooterState();
-                    
-                    // Wait 500ms before redirecting to ensure visual update
-                    setTimeout(() => {
-                        window.location.hash = ''; 
-                    }, 500);
+                    await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
+                    // Poller will update the footer automatically
+                    setTimeout(() => { window.location.hash = ''; }, 200);
                 } catch (error) {
                     let msg = "Invalid email or password.";
                     if (error.code === 'auth/invalid-credential') msg = "Incorrect email or password.";
@@ -456,7 +451,7 @@
                         summary: document.getElementById('summary').value,
                         content: document.getElementById('content').value,
                         createdAt: Date.now(),
-                        submitterId: currentUser ? currentUser.uid : 'unknown', 
+                        submitterId: auth.currentUser ? auth.currentUser.uid : 'unknown', 
                         isGrayscale: true 
                     });
                     alert("Article Published Successfully!"); window.location.hash = ''; 
