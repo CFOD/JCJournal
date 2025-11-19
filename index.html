@@ -126,7 +126,7 @@
         };
     </script>
 
-    <!-- Firebase SDKs -->
+     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -138,7 +138,7 @@
         // =================================================================
         
         const firebaseConfig = {
-  apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
+              apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
   authDomain: "jc-journal.firebaseapp.com",
   projectId: "jc-journal",
   storageBucket: "jc-journal.firebasestorage.app",
@@ -173,7 +173,6 @@
 
         let allArticles = []; 
         let displayedCount = 5; 
-        // We use a global variable to track user state instantly
         let currentUser = null; 
         let currentView = 'home'; 
         let dataListenerUnsubscribe = null;
@@ -187,10 +186,10 @@
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             dateElement.textContent = today.toLocaleDateString('en-US', options).toUpperCase();
 
-            // Auth Listener: This is the source of truth from Firebase
+            // Auth Listener: Source of Truth
             onAuthStateChanged(auth, (user) => {
                 currentUser = user;
-                updateFooterState(user);
+                updateFooterState(); // Auto-update footer when state changes
                 
                 if (!dataListenerUnsubscribe) {
                     setupDataListener();
@@ -198,14 +197,18 @@
             });
 
             window.addEventListener('hashchange', handleRouting);
-            handleRouting(); 
+            setTimeout(handleRouting, 100); 
         }
 
-        function updateFooterState(user) {
+        // Robust footer updater - checks direct auth state
+        function updateFooterState() {
             const footerLinks = document.getElementById('footer-links');
             const debugEl = document.getElementById('auth-debug');
             
             if (!footerLinks) return;
+
+            // Use either the listener variable OR the direct SDK state
+            const user = currentUser || auth.currentUser;
 
             if (user) {
                 console.log("UI Update: Logged In", user.email);
@@ -237,8 +240,8 @@
         function handleRouting() {
             const hash = window.location.hash;
             
-            // Ensure footer is correct on every route change
-            updateFooterState(currentUser);
+            // Force check on every route change
+            updateFooterState();
 
             if (hash === '' || hash === '#') {
                 currentView = 'home';
@@ -248,7 +251,8 @@
                 currentView = 'login';
                 renderLoginForm();
             } else if (hash === '#submit') {
-                if (!currentUser && !auth.currentUser) { 
+                const user = currentUser || auth.currentUser;
+                if (!user) { 
                     window.location.hash = '#login'; 
                     return; 
                 }
@@ -407,15 +411,16 @@
             document.getElementById('login-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 try {
-                    // 1. Sign in
                     const userCredential = await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
                     
-                    // 2. Manually force the state update immediately (Fixes the race condition)
+                    // FIX: Immediately update state variables and UI
                     currentUser = userCredential.user;
-                    updateFooterState(currentUser);
+                    updateFooterState();
                     
-                    // 3. Go Home
-                    window.location.hash = ''; 
+                    // Wait 500ms before redirecting to ensure visual update
+                    setTimeout(() => {
+                        window.location.hash = ''; 
+                    }, 500);
                 } catch (error) {
                     let msg = "Invalid email or password.";
                     if (error.code === 'auth/invalid-credential') msg = "Incorrect email or password.";
@@ -451,7 +456,7 @@
                         summary: document.getElementById('summary').value,
                         content: document.getElementById('content').value,
                         createdAt: Date.now(),
-                        submitterId: currentUser.uid, 
+                        submitterId: currentUser ? currentUser.uid : 'unknown', 
                         isGrayscale: true 
                     });
                     alert("Article Published Successfully!"); window.location.hash = ''; 
