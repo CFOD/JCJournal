@@ -290,16 +290,17 @@
 
         function renderHome() {
             const searchTerm = searchInput.value.toLowerCase();
-            const filteredArticles = allArticles.filter(a => 
-														
-			const dateStr = new Date(a.createdAt).toLocaleDateString().toLowerCase();
-				
-                (a.title && a.title.toLowerCase().includes(searchTerm)) || 
-                (a.summary && a.summary.toLowerCase().includes(searchTerm)) ||
-                (a.author && a.author.toLowerCase().includes(searchTerm)) ||
-                (a.content && a.content.toLowerCase().includes(searchTerm)) ||
-				(dateStr.includes(searchTerm));
-            );
+            
+            const filteredArticles = allArticles.filter(a => {
+                // Convert the timestamp to a string (e.g. "11/19/2025") so we can search it
+                const dateStr = new Date(a.createdAt).toLocaleDateString().toLowerCase();
+                
+                return (a.title && a.title.toLowerCase().includes(searchTerm)) || 
+                       (a.summary && a.summary.toLowerCase().includes(searchTerm)) ||
+                       (a.author && a.author.toLowerCase().includes(searchTerm)) ||
+                       (a.content && a.content.toLowerCase().includes(searchTerm)) ||
+                       (dateStr.includes(searchTerm));
+            });
 
             const articlesToShow = filteredArticles.slice(0, displayedCount);
             
@@ -430,7 +431,7 @@
                         content: document.getElementById('content').value,
                         createdAt: Date.now(),
                         submitterId: currentUser.uid, 
-                        isGrayscale: true 
+                        isGrayscale: false 
                     });
                     alert("Article Published Successfully!"); window.location.hash = ''; 
                 } catch (error) {
