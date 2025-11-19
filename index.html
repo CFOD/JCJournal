@@ -138,12 +138,12 @@
         // =================================================================
         
         const firebaseConfig = {
-              apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
-  			authDomain: "jc-journal.firebaseapp.com",
-  			projectId: "jc-journal",
-  			storageBucket: "jc-journal.firebasestorage.app",
-  			messagingSenderId: "931803753012",
-  			appId: "1:931803753012:web:fce867abf6794c180ff861"
+  apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
+  authDomain: "jc-journal.firebaseapp.com",
+  projectId: "jc-journal",
+  storageBucket: "jc-journal.firebasestorage.app",
+  messagingSenderId: "931803753012",
+  appId: "1:931803753012:web:fce867abf6794c180ff861"
         };
 
         // =================================================================
@@ -186,30 +186,20 @@
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             dateElement.textContent = today.toLocaleDateString('en-US', options).toUpperCase();
 
-            // Listen for Auth Changes
             onAuthStateChanged(auth, (user) => {
                 currentUser = user;
+                updateFooter(); // Update UI when auth state confirms
+                
+                // Debug indicator
                 const debugEl = document.getElementById('auth-debug');
-                
-                if (user) {
-                    console.log("User logged in:", user.email);
-                    if(debugEl) debugEl.textContent = `Status: Logged In (${user.email})`;
-                    if(debugEl) debugEl.style.color = 'green';
-                } else {
-                    console.log("User logged out (Guest Mode)");
-                    if(debugEl) debugEl.textContent = "Status: Guest Mode";
-                    if(debugEl) debugEl.style.color = 'gray';
-                }
-                
-                updateFooter(); 
-                
+                if(debugEl) debugEl.textContent = user ? "Logged In" : "Guest";
+
                 if (!dataListenerUnsubscribe) {
                     setupDataListener();
                 }
             });
 
             window.addEventListener('hashchange', handleRouting);
-            // Force routing check on init (small delay to allow auth to settle if cached)
             setTimeout(handleRouting, 100); 
         }
 
@@ -217,7 +207,7 @@
             const footerLinks = document.getElementById('footer-links');
             if (!footerLinks) return;
 
-            // Ensure we use the most up-to-date auth state
+            // Check currentUser OR fallback to auth.currentUser
             const user = currentUser || auth.currentUser;
 
             if (user) {
@@ -240,7 +230,7 @@
         function handleRouting() {
             const hash = window.location.hash;
             
-            // Always ensure footer is correct when route changes
+            // Force footer update on route change
             updateFooter();
 
             if (hash === '' || hash === '#') {
@@ -251,8 +241,7 @@
                 currentView = 'login';
                 renderLoginForm();
             } else if (hash === '#submit') {
-                const user = currentUser || auth.currentUser;
-                if (!user) { 
+                if (!currentUser && !auth.currentUser) { 
                     window.location.hash = '#login'; 
                     return; 
                 }
@@ -263,7 +252,10 @@
                 const articleId = hash.split('/')[1];
                 if (allArticles.length > 0) renderArticleDetail(articleId);
             } else if (hash === '#logout') {
-                signOut(auth).then(() => { window.location.hash = ''; });
+                signOut(auth).then(() => { 
+                    currentUser = null;
+                    window.location.hash = ''; 
+                });
             }
         }
 
@@ -382,6 +374,7 @@
         }
         
         function renderLoginForm() {
+            // Use explicit auth check to prevent stale state
             const user = currentUser || auth.currentUser;
             if (user) {
                  mainContent.innerHTML = `
@@ -409,7 +402,8 @@
                 e.preventDefault();
                 try {
                     await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
-                    currentUser = auth.currentUser; // Manual update for speed
+                    // FIX: Manually set user to force UI update immediately
+                    currentUser = auth.currentUser;
                     updateFooter();
                     window.location.hash = ''; 
                 } catch (error) {
@@ -447,7 +441,8 @@
                         summary: document.getElementById('summary').value,
                         content: document.getElementById('content').value,
                         createdAt: Date.now(),
-                        submitterId: currentUser.uid, 
+                        // FIX: Use currentUser instead of undefined variable 'user'
+                        submitterId: currentUser ? currentUser.uid : 'unknown', 
                         isGrayscale: true 
                     });
                     alert("Article Published Successfully!"); window.location.hash = ''; 
@@ -459,6 +454,27 @@
                     btn.textContent = originalText; btn.disabled = false;
                 }
             });
+        }
+
+        // --- Helper: Seed Database ---
+        async function seedDatabase(ref) {
+            // Fixed: use currentUser to check logic
+            if (!currentUser) return;
+            console.log("Seeding database...");
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const demos = [
+                 { title: "The Sixth Article (Lazy Loaded)", author: "I. M. Hidden", imageUrl: "https://placehold.co/192x128/cccccc/000000?text=Image+6&font=inter", summary: "This article will load when you scroll down.", content: "This is the content for the 6th article. It loaded dynamically!", isGrayscale: true },
+                 { title: "Article Number Five", author: "A. Person", imageUrl: "https://placehold.co/192x128/000000/ffffff?text=Image+5&font=inter", summary: "This is the last of the initially loaded articles.", content: "Quisque velit nisi, pretium ut lacinia in.", isGrayscale: false },
+                 { title: "The Fourth Title", author: "John Smith", imageUrl: "https://placehold.co/192x128/cccccc/000000?text=Image+4&font=inter", summary: "Another summary to fill the space.", content: "Donec sollicitudin molestie malesuada.", isGrayscale: true },
+                 { title: "A Third Article Appears", author: "Jane Doe", imageUrl: "https://placehold.co/192x128/000000/ffffff?text=Image+3&font=inter", summary: "This one is also just a placeholder.", content: "Praesent sapien massa.", isGrayscale: false },
+                 { title: "Fantastic Piece of Writing", author: "Jack Pendry", imageUrl: "https://placehold.co/192x128/cccccc/000000?text=Image+2&font=inter", summary: "REALLY GOOD STUFF, WHAT A GREAT READ!", content: "Vestibulum ante ipsum primis in faucibus.", isGrayscale: true },
+                 { title: "There is a non-zero chance this is a TITLE!!", author: "Connor O'Donnell", imageUrl: "https://placehold.co/192x128/000000/ffffff?text=Image+1&font=inter", summary: "SUMMARY FOR THE STUPID POINTLESS ARTICLE", content: "Lorem ipsum dolor sit amet.", isGrayscale: false }
+            ];
+
+            for (let i = 0; i < demos.length; i++) {
+                await new Promise(r => setTimeout(r, 200)); 
+                await addDoc(ref, { ...demos[i], createdAt: Date.now() - (i * 100000), submitterId: currentUser.uid });
+            }
         }
 
         searchInput.addEventListener('input', () => { displayedCount = 5; if (currentView === 'home') renderHome(); });
