@@ -126,7 +126,7 @@
         };
     </script>
 
-    <!-- Firebase SDKs -->
+<!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -138,7 +138,7 @@
         // =================================================================
         
         const firebaseConfig = {
-            apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
+              apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
   			authDomain: "jc-journal.firebaseapp.com",
   			projectId: "jc-journal",
   			storageBucket: "jc-journal.firebasestorage.app",
@@ -173,7 +173,7 @@
 
         let allArticles = []; 
         let displayedCount = 5; 
-        let currentUser = null; // Renamed to avoid conflict and clarity
+        let currentUser = null; 
         let currentView = 'home'; 
         let dataListenerUnsubscribe = null;
 
@@ -186,31 +186,38 @@
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             dateElement.textContent = today.toLocaleDateString('en-US', options).toUpperCase();
 
-            // Auth Listener - Source of Truth
+            // Listen for Auth Changes
             onAuthStateChanged(auth, (user) => {
                 currentUser = user;
+                const debugEl = document.getElementById('auth-debug');
+                
                 if (user) {
                     console.log("User logged in:", user.email);
+                    if(debugEl) debugEl.textContent = `Status: Logged In (${user.email})`;
+                    if(debugEl) debugEl.style.color = 'green';
                 } else {
                     console.log("User logged out (Guest Mode)");
+                    if(debugEl) debugEl.textContent = "Status: Guest Mode";
+                    if(debugEl) debugEl.style.color = 'gray';
                 }
+                
                 updateFooter(); 
                 
-                // Setup data listener once (idempotent check)
                 if (!dataListenerUnsubscribe) {
                     setupDataListener();
                 }
             });
 
             window.addEventListener('hashchange', handleRouting);
-            handleRouting(); 
+            // Force routing check on init (small delay to allow auth to settle if cached)
+            setTimeout(handleRouting, 100); 
         }
 
         function updateFooter() {
             const footerLinks = document.getElementById('footer-links');
             if (!footerLinks) return;
 
-            // Use auth.currentUser directly as backup check
+            // Ensure we use the most up-to-date auth state
             const user = currentUser || auth.currentUser;
 
             if (user) {
@@ -219,7 +226,7 @@
                     <span class="mx-2">|</span> 
                     <a href="#submit" class="hover:text-red-500 transition-colors font-bold">Submit Article</a>
                     <span class="mx-2">|</span> 
-                    <a href="#logout" class="hover:text-red-500 transition-colors">Logout (${user.email})</a>
+                    <a href="#logout" class="hover:text-red-500 transition-colors">Logout</a>
                 `;
             } else {
                 footerLinks.innerHTML = `
@@ -232,6 +239,10 @@
 
         function handleRouting() {
             const hash = window.location.hash;
+            
+            // Always ensure footer is correct when route changes
+            updateFooter();
+
             if (hash === '' || hash === '#') {
                 currentView = 'home';
                 if (mainContent) mainContent.scrollTop = 0;
@@ -240,8 +251,8 @@
                 currentView = 'login';
                 renderLoginForm();
             } else if (hash === '#submit') {
-                // Check both state variable and direct auth
-                if (!currentUser && !auth.currentUser) { 
+                const user = currentUser || auth.currentUser;
+                if (!user) { 
                     window.location.hash = '#login'; 
                     return; 
                 }
@@ -265,7 +276,6 @@
                     allArticles.push({ id: doc.id, ...doc.data() });
                 });
 
-                // If empty, we don't auto-seed guests
                 if (allArticles.length === 0) {
                     if (currentView === 'home') renderHome();
                     return;
@@ -372,6 +382,19 @@
         }
         
         function renderLoginForm() {
+            const user = currentUser || auth.currentUser;
+            if (user) {
+                 mainContent.innerHTML = `
+                    <div class="fade-in max-w-md mx-auto bg-white p-8 border-2 border-black mb-20 mt-10 text-center">
+                        <h2 class="text-2xl font-bold uppercase mb-4 font-title-custom">You are logged in</h2>
+                        <p class="mb-6">Welcome, ${user.email}</p>
+                        <a href="#submit" class="block w-full bg-black text-white font-bold uppercase py-3 px-8 hover:bg-gray-800 transition-colors mb-4">Submit Article</a>
+                        <a href="#" class="block w-full border-2 border-black text-black font-bold uppercase py-3 px-8 hover:bg-gray-100 transition-colors">Go Home</a>
+                    </div>
+                `;
+                return;
+            }
+
              mainContent.innerHTML = `
                 <div class="fade-in max-w-md mx-auto bg-white p-8 border-2 border-black mb-20 mt-10">
                     <h2 class="text-3xl font-bold uppercase mb-6 text-center font-title-custom">Staff Login</h2>
@@ -386,8 +409,7 @@
                 e.preventDefault();
                 try {
                     await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
-                    // Success! Force UI update immediately
-                    currentUser = auth.currentUser;
+                    currentUser = auth.currentUser; // Manual update for speed
                     updateFooter();
                     window.location.hash = ''; 
                 } catch (error) {
