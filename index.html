@@ -126,7 +126,7 @@
         };
     </script>
 
-<!-- Firebase SDKs -->
+    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -173,6 +173,7 @@
 
         let allArticles = []; 
         let displayedCount = 5; 
+        // We use a global variable to track user state instantly
         let currentUser = null; 
         let currentView = 'home'; 
         let dataListenerUnsubscribe = null;
@@ -186,31 +187,28 @@
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             dateElement.textContent = today.toLocaleDateString('en-US', options).toUpperCase();
 
+            // Auth Listener: This is the source of truth from Firebase
             onAuthStateChanged(auth, (user) => {
                 currentUser = user;
-                updateFooter(); // Update UI when auth state confirms
+                updateFooterState(user);
                 
-                // Debug indicator
-                const debugEl = document.getElementById('auth-debug');
-                if(debugEl) debugEl.textContent = user ? "Logged In" : "Guest";
-
                 if (!dataListenerUnsubscribe) {
                     setupDataListener();
                 }
             });
 
             window.addEventListener('hashchange', handleRouting);
-            setTimeout(handleRouting, 100); 
+            handleRouting(); 
         }
 
-        function updateFooter() {
+        function updateFooterState(user) {
             const footerLinks = document.getElementById('footer-links');
+            const debugEl = document.getElementById('auth-debug');
+            
             if (!footerLinks) return;
 
-            // Check currentUser OR fallback to auth.currentUser
-            const user = currentUser || auth.currentUser;
-
             if (user) {
+                console.log("UI Update: Logged In", user.email);
                 footerLinks.innerHTML = `
                     © 2025 JCJournal. All Rights Reserved. 
                     <span class="mx-2">|</span> 
@@ -218,20 +216,29 @@
                     <span class="mx-2">|</span> 
                     <a href="#logout" class="hover:text-red-500 transition-colors">Logout</a>
                 `;
+                if(debugEl) {
+                    debugEl.textContent = `Logged In: ${user.email}`;
+                    debugEl.style.color = "green";
+                }
             } else {
+                console.log("UI Update: Guest");
                 footerLinks.innerHTML = `
                     © 2025 JCJournal. All Rights Reserved. 
                     <span class="mx-2">|</span> 
                     <a href="#login" class="hover:text-red-500 transition-colors font-bold">Staff Login</a>
                 `;
+                if(debugEl) {
+                    debugEl.textContent = "Guest Mode";
+                    debugEl.style.color = "gray";
+                }
             }
         }
 
         function handleRouting() {
             const hash = window.location.hash;
             
-            // Force footer update on route change
-            updateFooter();
+            // Ensure footer is correct on every route change
+            updateFooterState(currentUser);
 
             if (hash === '' || hash === '#') {
                 currentView = 'home';
@@ -374,7 +381,6 @@
         }
         
         function renderLoginForm() {
-            // Use explicit auth check to prevent stale state
             const user = currentUser || auth.currentUser;
             if (user) {
                  mainContent.innerHTML = `
@@ -401,10 +407,14 @@
             document.getElementById('login-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 try {
-                    await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
-                    // FIX: Manually set user to force UI update immediately
-                    currentUser = auth.currentUser;
-                    updateFooter();
+                    // 1. Sign in
+                    const userCredential = await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
+                    
+                    // 2. Manually force the state update immediately (Fixes the race condition)
+                    currentUser = userCredential.user;
+                    updateFooterState(currentUser);
+                    
+                    // 3. Go Home
                     window.location.hash = ''; 
                 } catch (error) {
                     let msg = "Invalid email or password.";
@@ -441,8 +451,7 @@
                         summary: document.getElementById('summary').value,
                         content: document.getElementById('content').value,
                         createdAt: Date.now(),
-                        // FIX: Use currentUser instead of undefined variable 'user'
-                        submitterId: currentUser ? currentUser.uid : 'unknown', 
+                        submitterId: currentUser.uid, 
                         isGrayscale: true 
                     });
                     alert("Article Published Successfully!"); window.location.hash = ''; 
@@ -454,27 +463,6 @@
                     btn.textContent = originalText; btn.disabled = false;
                 }
             });
-        }
-
-        // --- Helper: Seed Database ---
-        async function seedDatabase(ref) {
-            // Fixed: use currentUser to check logic
-            if (!currentUser) return;
-            console.log("Seeding database...");
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            const demos = [
-                 { title: "The Sixth Article (Lazy Loaded)", author: "I. M. Hidden", imageUrl: "https://placehold.co/192x128/cccccc/000000?text=Image+6&font=inter", summary: "This article will load when you scroll down.", content: "This is the content for the 6th article. It loaded dynamically!", isGrayscale: true },
-                 { title: "Article Number Five", author: "A. Person", imageUrl: "https://placehold.co/192x128/000000/ffffff?text=Image+5&font=inter", summary: "This is the last of the initially loaded articles.", content: "Quisque velit nisi, pretium ut lacinia in.", isGrayscale: false },
-                 { title: "The Fourth Title", author: "John Smith", imageUrl: "https://placehold.co/192x128/cccccc/000000?text=Image+4&font=inter", summary: "Another summary to fill the space.", content: "Donec sollicitudin molestie malesuada.", isGrayscale: true },
-                 { title: "A Third Article Appears", author: "Jane Doe", imageUrl: "https://placehold.co/192x128/000000/ffffff?text=Image+3&font=inter", summary: "This one is also just a placeholder.", content: "Praesent sapien massa.", isGrayscale: false },
-                 { title: "Fantastic Piece of Writing", author: "Jack Pendry", imageUrl: "https://placehold.co/192x128/cccccc/000000?text=Image+2&font=inter", summary: "REALLY GOOD STUFF, WHAT A GREAT READ!", content: "Vestibulum ante ipsum primis in faucibus.", isGrayscale: true },
-                 { title: "There is a non-zero chance this is a TITLE!!", author: "Connor O'Donnell", imageUrl: "https://placehold.co/192x128/000000/ffffff?text=Image+1&font=inter", summary: "SUMMARY FOR THE STUPID POINTLESS ARTICLE", content: "Lorem ipsum dolor sit amet.", isGrayscale: false }
-            ];
-
-            for (let i = 0; i < demos.length; i++) {
-                await new Promise(r => setTimeout(r, 200)); 
-                await addDoc(ref, { ...demos[i], createdAt: Date.now() - (i * 100000), submitterId: currentUser.uid });
-            }
         }
 
         searchInput.addEventListener('input', () => { displayedCount = 5; if (currentView === 'home') renderHome(); });
