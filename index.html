@@ -128,30 +128,22 @@
 
     <!-- Firebase SDKs -->
     <script type="module">
-        // Helper to update status text
-        function logStatus(msg, type = 'info') {
-            const el = document.getElementById('status-msg');
-            if (!el) return;
-            const color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'gray';
-            const fontWeight = type === 'info' ? 'normal' : 'bold';
-            el.innerHTML += `<div style="color:${color}; font-weight:${fontWeight}; margin-top:4px;">${msg}</div>`;
-        }
-
-        logStatus("Loading Firebase Modules...");
-
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        logStatus("Modules Loaded.");
+        // =================================================================
+        //  CONFIGURATION SECTION
+        //  Paste your Firebase keys inside this object.
+        // =================================================================
         
         const firebaseConfig = {
-             	apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
-  				authDomain: "jc-journal.firebaseapp.com",
-  				projectId: "jc-journal",
-  				storageBucket: "jc-journal.firebasestorage.app",
-  				messagingSenderId: "931803753012",
-  				appId: "1:931803753012:web:fce867abf6794c180ff861"
+            apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
+  			authDomain: "jc-journal.firebaseapp.com",
+  			projectId: "jc-journal",
+  			storageBucket: "jc-journal.firebasestorage.app",
+  			messagingSenderId: "931803753012",
+  			appId: "1:931803753012:web:fce867abf6794c180ff861"
         };
 
         // =================================================================
@@ -160,25 +152,30 @@
         
         try {
             if (firebaseConfig.apiKey.includes("PASTE_YOUR")) {
-                logStatus("Error: Config Placeholders Detected.", 'error');
-                logStatus("Please edit the file and paste your keys.", 'error');
                 throw new Error("Config Placeholder Detected");
             }
             app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             db = getFirestore(app);
-            logStatus("Firebase App Initialized.", 'success');
         } catch (e) {
-            if (!e.message.includes("Config Placeholder")) {
-                logStatus(`Config Error: ${e.message}`, 'error');
-            }
-            throw e; 
+             const statusMsg = document.getElementById('status-msg');
+             if(statusMsg) {
+                 statusMsg.innerHTML = `
+                    <span style="color:red; font-weight:bold;">Configuration Missing or Invalid</span><br><br>
+                    1. Open this file in the editor.<br>
+                    2. Scroll to line ~130.<br>
+                    3. Paste your Firebase keys into <code>firebaseConfig</code>.<br>
+                    4. Save and refresh.
+                 `;
+             }
+             throw e; 
         }
 
         let allArticles = []; 
         let displayedCount = 5; 
-        let user = null;
+        let currentUser = null; // Renamed to avoid conflict and clarity
         let currentView = 'home'; 
+        let dataListenerUnsubscribe = null;
 
         const mainContent = document.getElementById('main-content');
         const dateElement = document.getElementById('current-date');
@@ -189,26 +186,20 @@
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             dateElement.textContent = today.toLocaleDateString('en-US', options).toUpperCase();
 
-            logStatus("Waiting for Auth State...");
-
-            // Safety Timeout
-            setTimeout(() => {
-                const el = document.getElementById('status-msg');
-                if (el && el.innerHTML.includes("Waiting for Auth State")) {
-                     logStatus("Timeout: Auth taking too long.", 'error');
-                     logStatus("Check your internet or Firebase Config keys.", 'error');
-                }
-            }, 8000);
-
-            onAuthStateChanged(auth, (u) => {
-                user = u;
+            // Auth Listener - Source of Truth
+            onAuthStateChanged(auth, (user) => {
+                currentUser = user;
                 if (user) {
-                    logStatus(`Logged in: ${user.email}`, 'success');
+                    console.log("User logged in:", user.email);
                 } else {
-                    logStatus("Guest Mode (Not logged in).", 'success');
+                    console.log("User logged out (Guest Mode)");
                 }
                 updateFooter(); 
-                setupDataListener();
+                
+                // Setup data listener once (idempotent check)
+                if (!dataListenerUnsubscribe) {
+                    setupDataListener();
+                }
             });
 
             window.addEventListener('hashchange', handleRouting);
@@ -218,6 +209,9 @@
         function updateFooter() {
             const footerLinks = document.getElementById('footer-links');
             if (!footerLinks) return;
+
+            // Use auth.currentUser directly as backup check
+            const user = currentUser || auth.currentUser;
 
             if (user) {
                 footerLinks.innerHTML = `
@@ -246,7 +240,11 @@
                 currentView = 'login';
                 renderLoginForm();
             } else if (hash === '#submit') {
-                if (!user) { window.location.hash = '#login'; return; }
+                // Check both state variable and direct auth
+                if (!currentUser && !auth.currentUser) { 
+                    window.location.hash = '#login'; 
+                    return; 
+                }
                 currentView = 'submit';
                 renderSubmitForm();
             } else if (hash.startsWith('#article/')) {
@@ -259,18 +257,16 @@
         }
 
         function setupDataListener() {
-            logStatus("Connecting to Firestore Database...");
             const articlesRef = collection(db, 'articles');
             
-            onSnapshot(articlesRef, async (snapshot) => {
-                logStatus(`Data Received: ${snapshot.size} docs.`, 'success');
+            dataListenerUnsubscribe = onSnapshot(articlesRef, async (snapshot) => {
                 allArticles = [];
                 snapshot.forEach((doc) => {
                     allArticles.push({ id: doc.id, ...doc.data() });
                 });
 
+                // If empty, we don't auto-seed guests
                 if (allArticles.length === 0) {
-                    // Clear loader and show empty state
                     if (currentView === 'home') renderHome();
                     return;
                 }
@@ -284,11 +280,11 @@
                 }
             }, (error) => {
                 console.error("Error fetching articles:", error);
-                let msg = `Database Error: ${error.code}`;
+                let msg = "Error connecting to database.";
                 if (error.code === 'permission-denied') {
-                    msg = "Permission Denied. <br>Check Firestore Rules in Console.";
+                    msg = "Permission Denied.<br>Ensure Firestore Rules allow public read access.";
                 }
-                logStatus(msg, 'error');
+                mainContent.innerHTML = `<div class="text-center text-red-500 mt-10">${msg}</div>`;
             });
         }
 
@@ -390,6 +386,9 @@
                 e.preventDefault();
                 try {
                     await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
+                    // Success! Force UI update immediately
+                    currentUser = auth.currentUser;
+                    updateFooter();
                     window.location.hash = ''; 
                 } catch (error) {
                     let msg = "Invalid email or password.";
@@ -426,7 +425,7 @@
                         summary: document.getElementById('summary').value,
                         content: document.getElementById('content').value,
                         createdAt: Date.now(),
-                        submitterId: user.uid, 
+                        submitterId: currentUser.uid, 
                         isGrayscale: true 
                     });
                     alert("Article Published Successfully!"); window.location.hash = ''; 
