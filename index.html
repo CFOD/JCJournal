@@ -105,151 +105,195 @@
             <p class="text-xs text-gray-600 uppercase">
                 © 2025 JCJournal. All Rights Reserved. 
                 <span class="mx-2">|</span> 
-                <a href="#submit" class="hover:text-red-500 transition-colors font-bold">Submit Article</a>
+                <a href="#login" class="hover:text-red-500 transition-colors font-bold">Login</a>
             </p>
         </footer>
 
     </div>
 
+	    <!-- Global Error Handler to catch syntax errors in config -->
+    <script>
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            const statusMsg = document.getElementById('status-msg');
+            if (statusMsg) {
+                statusMsg.innerHTML = `
+                    <span style="color:red; font-weight:bold;">CRITICAL ERROR:</span><br>
+                    ${msg}<br>
+                    <span style="font-size:10px">Line: ${lineNo}</span>
+                `;
+            }
+            return false;
+        };
+    </script>
+
     <!-- Firebase SDKs -->
     <script type="module">
+        // Helper to update status text
+        function logStatus(msg, type = 'info') {
+            const el = document.getElementById('status-msg');
+            if (!el) return;
+            const color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'gray';
+            const fontWeight = type === 'info' ? 'normal' : 'bold';
+            el.innerHTML += `<div style="color:${color}; font-weight:${fontWeight}; margin-top:4px;">${msg}</div>`;
+        }
+
+        logStatus("Loading Firebase Modules...");
+
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Configuration ---
-        // If running in the chat preview, we use the environment config.
-        // If running LOCALLY (on your VPS), we use the object below.
-        // PASTE YOUR FIREBASE KEYS INTO THE OBJECT BELOW.
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : {
-                apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
+        logStatus("Modules Loaded.");
+        
+        const firebaseConfig = {
+             	apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
   				authDomain: "jc-journal.firebaseapp.com",
   				projectId: "jc-journal",
   				storageBucket: "jc-journal.firebasestorage.app",
   				messagingSenderId: "931803753012",
   				appId: "1:931803753012:web:fce867abf6794c180ff861"
-            };
+        };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        // =================================================================
 
-        // --- State ---
+        let app, auth, db;
+        
+        try {
+            if (firebaseConfig.apiKey.includes("PASTE_YOUR")) {
+                logStatus("Error: Config Placeholders Detected.", 'error');
+                logStatus("Please edit the file and paste your keys.", 'error');
+                throw new Error("Config Placeholder Detected");
+            }
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            logStatus("Firebase App Initialized.", 'success');
+        } catch (e) {
+            if (!e.message.includes("Config Placeholder")) {
+                logStatus(`Config Error: ${e.message}`, 'error');
+            }
+            throw e; 
+        }
+
         let allArticles = []; 
         let displayedCount = 5; 
         let user = null;
         let currentView = 'home'; 
 
-        // --- DOM Elements ---
         const mainContent = document.getElementById('main-content');
         const dateElement = document.getElementById('current-date');
         const searchInput = document.getElementById('search-input');
 
-        // --- Initialization ---
         async function init() {
-            // 1. Set Date
             const today = new Date();
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             dateElement.textContent = today.toLocaleDateString('en-US', options).toUpperCase();
 
-            // 2. Authenticate
-            try {
-                // If in chat preview, use special token
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    // If on VPS/Local, use Anonymous Auth
-                    // NOTE: Enable "Anonymous" sign-in method in Firebase Console -> Authentication
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Auth Error:", error);
-                const statusMsg = document.getElementById('status-msg');
-                if(statusMsg) statusMsg.innerHTML = `Authentication failed.<br>Check console for details.<br>(${error.code})`;
-                return;
-            }
+            logStatus("Waiting for Auth State...");
 
-            // 3. Auth Listener
+            // Safety Timeout
+            setTimeout(() => {
+                const el = document.getElementById('status-msg');
+                if (el && el.innerHTML.includes("Waiting for Auth State")) {
+                     logStatus("Timeout: Auth taking too long.", 'error');
+                     logStatus("Check your internet or Firebase Config keys.", 'error');
+                }
+            }, 8000);
+
             onAuthStateChanged(auth, (u) => {
                 user = u;
                 if (user) {
-                    console.log("Authenticated as:", user.uid);
-                    setupDataListener();
+                    logStatus(`Logged in: ${user.email}`, 'success');
+                } else {
+                    logStatus("Guest Mode (Not logged in).", 'success');
                 }
+                updateFooter(); 
+                setupDataListener();
             });
 
-            // 4. Handle Routing
             window.addEventListener('hashchange', handleRouting);
             handleRouting(); 
         }
 
-        // --- Routing System ---
+        function updateFooter() {
+            const footerLinks = document.getElementById('footer-links');
+            if (!footerLinks) return;
+
+            if (user) {
+                footerLinks.innerHTML = `
+                    © 2025 JCJournal. All Rights Reserved. 
+                    <span class="mx-2">|</span> 
+                    <a href="#submit" class="hover:text-red-500 transition-colors font-bold">Submit Article</a>
+                    <span class="mx-2">|</span> 
+                    <a href="#logout" class="hover:text-red-500 transition-colors">Logout (${user.email})</a>
+                `;
+            } else {
+                footerLinks.innerHTML = `
+                    © 2025 JCJournal. All Rights Reserved. 
+                    <span class="mx-2">|</span> 
+                    <a href="#login" class="hover:text-red-500 transition-colors font-bold">Staff Login</a>
+                `;
+            }
+        }
+
         function handleRouting() {
             const hash = window.location.hash;
             if (hash === '' || hash === '#') {
                 currentView = 'home';
                 if (mainContent) mainContent.scrollTop = 0;
                 if (allArticles.length > 0) renderHome();
+            } else if (hash === '#login') {
+                currentView = 'login';
+                renderLoginForm();
             } else if (hash === '#submit') {
+                if (!user) { window.location.hash = '#login'; return; }
                 currentView = 'submit';
                 renderSubmitForm();
             } else if (hash.startsWith('#article/')) {
                 currentView = 'article';
                 const articleId = hash.split('/')[1];
                 if (allArticles.length > 0) renderArticleDetail(articleId);
+            } else if (hash === '#logout') {
+                signOut(auth).then(() => { window.location.hash = ''; });
             }
         }
 
-        // --- Data Management ---
         function setupDataListener() {
-            // Use simple 'articles' collection for local/VPS usage
-            // Use 'artifacts' path for chat environment compatibility
-            let collectionPath = 'articles';
-            if (typeof __app_id !== 'undefined') {
-                 // We are in chat environment, use strict path
-                 // This logic allows the code to run in BOTH places
-            }
-            
-            // For simplicity in this hybrid file, we will determine the reference dynamically
-            let articlesRef;
-            if (typeof __app_id !== 'undefined') {
-                articlesRef = collection(db, 'artifacts', __app_id, 'public', 'data', 'articles');
-            } else {
-                // YOUR VPS/LOCAL PATH
-                articlesRef = collection(db, 'articles');
-            }
+            logStatus("Connecting to Firestore Database...");
+            const articlesRef = collection(db, 'articles');
             
             onSnapshot(articlesRef, async (snapshot) => {
+                logStatus(`Data Received: ${snapshot.size} docs.`, 'success');
                 allArticles = [];
                 snapshot.forEach((doc) => {
                     allArticles.push({ id: doc.id, ...doc.data() });
                 });
 
-                // Auto-seed only if empty and we have the function
+                if (allArticles.length === 0) {
+                    // Clear loader and show empty state
+                    if (currentView === 'home') renderHome();
+                    return;
+                }
 
-                // Sort newest first
                 allArticles.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
-                // Re-render current view
-                if (currentView === 'home') {
-                    renderHome();
-                } else if (currentView === 'article') {
-                    const hash = window.location.hash;
-                    const articleId = hash.split('/')[1];
+                if (currentView === 'home') renderHome();
+                else if (currentView === 'article') {
+                    const articleId = window.location.hash.split('/')[1];
                     renderArticleDetail(articleId);
                 }
             }, (error) => {
                 console.error("Error fetching articles:", error);
-                mainContent.innerHTML = `<div class="text-center text-red-500 mt-10">Error connecting to database.<br>Check your Firebase Config and Firestore Rules.</div>`;
+                let msg = `Database Error: ${error.code}`;
+                if (error.code === 'permission-denied') {
+                    msg = "Permission Denied. <br>Check Firestore Rules in Console.";
+                }
+                logStatus(msg, 'error');
             });
         }
 
-		        // --- Helper: Content Formatter ---
         function formatArticleText(text) {
             if (!text) return '<p>No content.</p>';
-            
             const lines = text.split('\n');
             let html = '';
             let inList = false;
@@ -257,181 +301,125 @@
             lines.forEach(line => {
                 const trimmed = line.trim();
                 if (!trimmed) return; 
-                
-                // Check for bullet points (- or * or •)
                 if (trimmed.startsWith('- ') || trimmed.startsWith('* ') || trimmed.startsWith('• ')) {
-                    if (!inList) {
-                        html += '<ul>'; // Class handled by CSS
-                        inList = true;
-                    }
-                    // Remove the bullet char and render li
+                    if (!inList) { html += '<ul>'; inList = true; }
                     html += `<li>${trimmed.substring(2)}</li>`;
                 } else {
-                    if (inList) {
-                        html += '</ul>';
-                        inList = false;
-                    }
+                    if (inList) { html += '</ul>'; inList = false; }
                     html += `<p class="mb-4">${trimmed}</p>`;
                 }
             });
-            
             if (inList) html += '</ul>';
             return html;
-        }  
-            
-        // --- View: Home ---
+        }
+
         function renderHome() {
             const searchTerm = searchInput.value.toLowerCase();
             const filteredArticles = allArticles.filter(a => 
                 (a.title && a.title.toLowerCase().includes(searchTerm)) || 
                 (a.summary && a.summary.toLowerCase().includes(searchTerm)) ||
-				(a.author && a.author.toLowerCase().includes(searchTerm)) ||
+                (a.author && a.author.toLowerCase().includes(searchTerm)) ||
                 (a.content && a.content.toLowerCase().includes(searchTerm))
             );
 
             const articlesToShow = filteredArticles.slice(0, displayedCount);
             
-            if (articlesToShow.length === 0 && allArticles.length > 0) {
-                mainContent.innerHTML = `<div class="text-center py-10 text-xl font-bold">No articles found.</div>`;
+            if (articlesToShow.length === 0) {
+                if (allArticles.length === 0) {
+                     mainContent.innerHTML = `<div class="text-center py-10 text-xl font-bold">No articles yet.<br><span class="text-sm font-normal">Login to post the first one.</span></div>`;
+                } else {
+                     mainContent.innerHTML = `<div class="text-center py-10 text-xl font-bold">No articles found.</div>`;
+                }
                 return;
             }
 
             let html = `<div class="fade-in space-y-10">`;
-
             articlesToShow.forEach(article => {
-                const isGrayscale = article.isGrayscale !== undefined ? article.isGrayscale : false;
-                
+                const isGrayscale = article.isGrayscale !== undefined ? article.isGrayscale : true;
                 html += `
                 <article class="flex flex-col sm:flex-row items-start border-b border-gray-200 pb-10 last:border-0">
                     <a href="#article/${article.id}" class="flex-shrink-0 w-full sm:w-48 cursor-pointer">
-                        <img src="${article.imageUrl || 'https://placehold.co/192x128/cccccc/000000?text=No+Image&font=inter'}" 
-                             alt="Thumbnail" 
-                             class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0 ${isGrayscale ? 'grayscale' : ''} hover:grayscale-0 transition-all duration-300">
+                        <img src="${article.imageUrl || 'https://placehold.co/192x128/cccccc/000000?text=No+Image&font=inter'}" class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0 ${isGrayscale ? 'grayscale' : ''} hover:grayscale-0 transition-all duration-300">
                     </a>
                     <div class="sm:ml-6 w-full">
-                        <a href="#article/${article.id}">
-                            <h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors cursor-pointer hover:text-gray-600">
-                                ${article.title || 'Untitled Article'}
-                            </h2>
-                        </a>
-                        <p class="text-base mb-3 text-gray-800">
-                            ${article.summary || 'No summary available.'}
-                        </p>
+                        <a href="#article/${article.id}"><h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors cursor-pointer hover:text-gray-600">${article.title || 'Untitled Article'}</h2></a>
+                        <p class="text-base mb-3 text-gray-800">${article.summary || ''}</p>
                         <div class="flex items-center space-x-3">
-                            <a href="#article/${article.id}" class="bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">
-                                Read More
-                            </a>
+                            <a href="#article/${article.id}" class="bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">Read More</a>
                             <span class="text-sm text-gray-600">by ${article.author || 'Unknown'}</span>
                         </div>
                     </div>
-                </article>
-                `;
+                </article>`;
             });
-
             if (articlesToShow.length < filteredArticles.length) {
                 html += `<div id="scroll-trigger" class="text-center text-gray-500 py-8 font-bold">Scroll for more...</div>`;
             }
-
             html += `</div>`;
             mainContent.innerHTML = html;
         }
 
-        // --- View: Article Detail ---
         function renderArticleDetail(id) {
             const article = allArticles.find(a => a.id === id);
-            
-            if (!article) {
-                mainContent.innerHTML = `<div class="text-center mt-20">Loading article...</div>`;
-                return;
-            }
-
-             // Use our new formatter logic
+            if (!article) { mainContent.innerHTML = `<div class="text-center mt-20">Loading article...</div>`; return; }
             const formattedContent = formatArticleText(article.content);
-
+            
             mainContent.innerHTML = `
                 <div class="fade-in pb-20">
                     <a href="#" class="inline-block mb-6 text-sm font-bold uppercase border-b border-black hover:text-red-500">← Back to Home</a>
-                    
                     <h1 class="text-4xl sm:text-6xl font-bold uppercase mb-4 font-title-custom leading-tight">${article.title}</h1>
-                    
                     <div class="flex items-center space-x-2 text-sm text-gray-600 mb-8 border-b border-black pb-4">
-                        <span class="font-bold text-black uppercase">By ${article.author}</span>
-                        <span>•</span>
-                        <span>${new Date(article.createdAt).toLocaleDateString()}</span>
+                        <span class="font-bold text-black uppercase">By ${article.author}</span><span>•</span><span>${new Date(article.createdAt).toLocaleDateString()}</span>
                     </div>
-
-                    <img src="${article.imageUrl || 'https://placehold.co/800x400/cccccc/000000?text=No+Image'}" 
-                         class="w-full h-auto max-h-[500px] object-cover mb-8 rounded ${article.isGrayscale ? 'grayscale' : ''}">
-
-                    <div class="article-body prose prose-lg max-w-none font-inter text-gray-800 leading-relaxed">
-                        <p class="font-bold text-xl mb-6 italic">${article.summary}</p>
-                        ${formattedContent}
-                    </div>
-                </div>
-            `;
+                    <img src="${article.imageUrl || 'https://placehold.co/800x400/cccccc/000000?text=No+Image'}" class="w-full h-auto max-h-[500px] object-cover mb-8 rounded ${article.isGrayscale ? 'grayscale' : ''}">
+                    <div class="article-body prose prose-lg max-w-none font-inter text-gray-800 leading-relaxed"><p class="font-bold text-xl mb-6 italic">${article.summary}</p>${formattedContent}</div>
+                </div>`;
+        }
+        
+        function renderLoginForm() {
+             mainContent.innerHTML = `
+                <div class="fade-in max-w-md mx-auto bg-white p-8 border-2 border-black mb-20 mt-10">
+                    <h2 class="text-3xl font-bold uppercase mb-6 text-center font-title-custom">Staff Login</h2>
+                    <form id="login-form" class="space-y-4">
+                        <div><label class="block text-xs font-bold uppercase mb-1">Email</label><input type="email" id="email" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500"></div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Password</label><input type="password" id="password" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500"></div>
+                        <div class="pt-4"><button type="submit" class="w-full bg-black text-white font-bold uppercase py-3 px-8 hover:bg-gray-800 transition-colors">Login</button></div>
+                        <p id="login-error" class="text-red-500 text-center text-sm font-bold mt-2"></p>
+                    </form>
+                </div>`;
+            document.getElementById('login-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                try {
+                    await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
+                    window.location.hash = ''; 
+                } catch (error) {
+                    let msg = "Invalid email or password.";
+                    if (error.code === 'auth/invalid-credential') msg = "Incorrect email or password.";
+                    document.getElementById('login-error').textContent = msg;
+                }
+            });
         }
 
-        // --- View: Submission Form ---
         function renderSubmitForm() {
             mainContent.innerHTML = `
                 <div class="fade-in max-w-2xl mx-auto bg-white p-8 border-2 border-black mb-20">
                     <h2 class="text-3xl font-bold uppercase mb-6 text-center font-title-custom">Submit New Article</h2>
-                    
                     <form id="article-form" class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold uppercase mb-1">Article Title</label>
-                            <input type="text" id="title" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 placeholder-gray-400" placeholder="e.g. THE STATE OF THE WORLD">
-                        </div>
-                        
+                        <div><label class="block text-xs font-bold uppercase mb-1">Article Title</label><input type="text" id="title" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 placeholder-gray-400" placeholder="e.g. THE STATE OF THE WORLD"></div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold uppercase mb-1">Author Name</label>
-                                <input type="text" id="author" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Your Name">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase mb-1">Image URL</label>
-                                <input type="text" id="imageUrl" placeholder="https://..." class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500">
-                                <p class="text-[10px] text-gray-500 mt-1">Paste a link to an image (Imgur, etc)</p>
-                            </div>
+                            <div><label class="block text-xs font-bold uppercase mb-1">Author Name</label><input type="text" id="author" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Your Name"></div>
+                            <div><label class="block text-xs font-bold uppercase mb-1">Image URL</label><input type="text" id="imageUrl" placeholder="https://..." class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500"><p class="text-[10px] text-gray-500 mt-1">Paste a link to an image (Imgur, etc)</p></div>
                         </div>
-
-                        <div>
-                            <label class="block text-xs font-bold uppercase mb-1">Short Summary</label>
-                            <textarea id="summary" rows="2" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Appears on the homepage..."></textarea>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold uppercase mb-1">Full Content</label>
-                            <textarea id="content" rows="10" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Write your article here..."></textarea>
-                        </div>
-
-                        <div class="pt-4 flex justify-between items-center">
-                            <a href="#" class="text-sm font-bold uppercase hover:text-red-500">Cancel</a>
-                            <button type="submit" class="bg-black text-white font-bold uppercase py-3 px-8 hover:bg-gray-800 transition-colors">
-                                Publish
-                            </button>
-                        </div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Short Summary</label><textarea id="summary" rows="2" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Appears on the homepage..."></textarea></div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Full Content</label><textarea id="content" rows="15" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Write here. Use - or * for automatic lists."></textarea><p class="text-[10px] text-gray-500 mt-1">Start a line with - or * to create a bullet list.</p></div>
+                        <div class="pt-4 flex justify-between items-center"><a href="#" class="text-sm font-bold uppercase hover:text-red-500">Cancel</a><button type="submit" class="bg-black text-white font-bold uppercase py-3 px-8 hover:bg-gray-800 transition-colors">Publish</button></div>
                     </form>
-                </div>
-            `;
-
+                </div>`;
             document.getElementById('article-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const btn = e.target.querySelector('button');
-                const originalText = btn.textContent;
-                btn.textContent = "Publishing...";
-                btn.disabled = true;
-
+                btn.textContent = "Publishing..."; btn.disabled = true;
                 try {
-                    // Dynamic Collection Reference (Chat vs Local)
-                    let collectionRef;
-                    if (typeof __app_id !== 'undefined') {
-                         collectionRef = collection(db, 'artifacts', __app_id, 'public', 'data', 'articles');
-                    } else {
-                         collectionRef = collection(db, 'articles');
-                    }
-                    
-                    await addDoc(collectionRef, {
+                    await addDoc(collection(db, 'articles'), {
                         title: document.getElementById('title').value,
                         author: document.getElementById('author').value,
                         imageUrl: document.getElementById('imageUrl').value,
@@ -439,41 +427,25 @@
                         content: document.getElementById('content').value,
                         createdAt: Date.now(),
                         submitterId: user.uid, 
-                        isGrayscale: false 
+                        isGrayscale: true 
                     });
-                    
-                    alert("Article Published Successfully!");
-                    window.location.hash = ''; 
+                    alert("Article Published Successfully!"); window.location.hash = ''; 
                 } catch (error) {
                     console.error("Error submitting:", error);
-                    alert(`Error: ${error.code || error.message}`);
-                    btn.textContent = originalText;
-                    btn.disabled = false;
+                    let msg = error.code || error.message;
+                    if (error.code === 'permission-denied') msg = "Permission Denied. You may not be authorized to write.";
+                    alert(`Error: ${msg}`);
+                    btn.textContent = originalText; btn.disabled = false;
                 }
             });
         }
 
-        // --- Event Listeners ---
-        searchInput.addEventListener('input', () => {
-            displayedCount = 5; 
-            if (currentView === 'home') renderHome();
-        });
-
+        searchInput.addEventListener('input', () => { displayedCount = 5; if (currentView === 'home') renderHome(); });
         mainContent.addEventListener('scroll', () => {
             if (currentView !== 'home') return;
-
-            const scrollTrigger = document.getElementById('scroll-trigger');
-            if (scrollTrigger) {
-                const triggerTop = scrollTrigger.getBoundingClientRect().top;
-                const containerBottom = mainContent.getBoundingClientRect().bottom;
-
-                if (triggerTop < containerBottom + 100) {
-                    // Debounce/limit updates
-                    if (displayedCount < allArticles.length) {
-                         displayedCount += 5; 
-                         renderHome();
-                    }
-                }
+            const st = document.getElementById('scroll-trigger');
+            if (st && st.getBoundingClientRect().top < mainContent.getBoundingClientRect().bottom + 100) {
+                if (displayedCount < allArticles.length) { displayedCount += 5; renderHome(); }
             }
         });
 
