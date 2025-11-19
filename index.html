@@ -246,6 +246,39 @@
             });
         }
 
+		        // --- Helper: Content Formatter ---
+        function formatArticleText(text) {
+            if (!text) return '<p>No content.</p>';
+            
+            const lines = text.split('\n');
+            let html = '';
+            let inList = false;
+            
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                if (!trimmed) return; 
+                
+                // Check for bullet points (- or * or •)
+                if (trimmed.startsWith('- ') || trimmed.startsWith('* ') || trimmed.startsWith('• ')) {
+                    if (!inList) {
+                        html += '<ul>'; // Class handled by CSS
+                        inList = true;
+                    }
+                    // Remove the bullet char and render li
+                    html += `<li>${trimmed.substring(2)}</li>`;
+                } else {
+                    if (inList) {
+                        html += '</ul>';
+                        inList = false;
+                    }
+                    html += `<p class="mb-4">${trimmed}</p>`;
+                }
+            });
+            
+            if (inList) html += '</ul>';
+            return html;
+        }  
+            
         // --- View: Home ---
         function renderHome() {
             const searchTerm = searchInput.value.toLowerCase();
@@ -312,9 +345,8 @@
                 return;
             }
 
-            const paragraphs = article.content 
-                ? article.content.split('\n').map(p => p.trim()).filter(p => p).map(p => `<p class="mb-4">${p}</p>`).join('')
-                : '<p>No content.</p>';
+             // Use our new formatter logic
+            const formattedContent = formatArticleText(article.content);
 
             mainContent.innerHTML = `
                 <div class="fade-in pb-20">
@@ -331,9 +363,9 @@
                     <img src="${article.imageUrl || 'https://placehold.co/800x400/cccccc/000000?text=No+Image'}" 
                          class="w-full h-auto max-h-[500px] object-cover mb-8 rounded ${article.isGrayscale ? 'grayscale' : ''}">
 
-                    <div class="prose prose-lg max-w-none font-inter text-gray-800 leading-relaxed">
+                    <div class="article-body prose prose-lg max-w-none font-inter text-gray-800 leading-relaxed">
                         <p class="font-bold text-xl mb-6 italic">${article.summary}</p>
-                        ${paragraphs}
+                        ${formattedContent}
                     </div>
                 </div>
             `;
