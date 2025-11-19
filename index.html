@@ -251,7 +251,9 @@
             const searchTerm = searchInput.value.toLowerCase();
             const filteredArticles = allArticles.filter(a => 
                 (a.title && a.title.toLowerCase().includes(searchTerm)) || 
-                (a.summary && a.summary.toLowerCase().includes(searchTerm))
+                (a.summary && a.summary.toLowerCase().includes(searchTerm)) ||
+				(a.author && a.author.toLowerCase().includes(searchTerm)) ||
+                (a.content && a.content.toLowerCase().includes(searchTerm))
             );
 
             const articlesToShow = filteredArticles.slice(0, displayedCount);
