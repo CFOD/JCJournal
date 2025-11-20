@@ -343,7 +343,7 @@
 
             let html = `<div class="fade-in space-y-10">`;
             articlesToShow.forEach(article => {
-                const isGrayscale = article.isGrayscale !== undefined ? article.isGrayscale : true;
+                const isGrayscale = article.isGrayscale !== undefined ? article.isGrayscale : false;
                 html += `
                 <article class="flex flex-col sm:flex-row items-start border-b border-gray-200 pb-10 last:border-0">
                     <a href="#article/${article.id}" class="flex-shrink-0 w-full sm:w-48 cursor-pointer">
@@ -502,7 +502,7 @@
                         imageUrl: document.getElementById('imageUrl').value,
                         summary: document.getElementById('summary').value,
                         content: document.getElementById('content').value,
-                        isGrayscale: true 
+                        isGrayscale: false 
                     };
 
                     if (editId) {
