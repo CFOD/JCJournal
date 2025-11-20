@@ -33,16 +33,7 @@
       }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-      /* Config Error Overlay */
-      #config-error-overlay {
-          display: none;
-          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-          background: rgba(255,255,255,0.95); z-index: 9999;
-          flex-direction: column; justify-content: center; align-items: center;
-          text-align: center; padding: 20px;
-      }
-
-      /* --- IMPROVED ARTICLE FORMATTING --- */
+      /* --- ARTICLE FORMATTING --- */
       .article-body {
           overflow-wrap: break-word;
           word-wrap: break-word;
@@ -68,19 +59,6 @@
     </style>
 </head>
 <body class="bg-[#FFFDF3] font-inter text-black h-screen overflow-hidden flex flex-col">
-
-    <!-- Config Error Overlay -->
-    <div id="config-error-overlay">
-        <h1 class="text-4xl font-bold text-red-600 mb-4">CONFIGURATION MISSING</h1>
-        <p class="text-xl mb-4">You have not pasted your Firebase API Keys yet.</p>
-        <div class="bg-gray-100 p-4 rounded border border-gray-400 text-left font-mono text-sm mb-6">
-            1. Open this HTML file in a text editor.<br>
-            2. Scroll down to the <strong>CONFIGURATION SECTION</strong> (Line ~155).<br>
-            3. Replace the "PASTE_YOUR..." values with your real keys.<br>
-            4. Save and Refresh.
-        </div>
-        <button onclick="location.reload()" class="bg-black text-white px-6 py-2 font-bold uppercase hover:bg-gray-800">I Fixed It, Refresh</button>
-    </div>
 
     <div class="container mx-auto p-4 sm:p-8 max-w-6xl flex flex-col h-full">
 
@@ -124,7 +102,6 @@
                 <span class="mx-2">|</span> 
                 <a href="#login" class="hover:text-red-500 transition-colors font-bold">Staff Login</a>
             </p>
-            <!-- Visual Debugger -->
             <div id="auth-debug" class="absolute bottom-0 right-0 text-[10px] font-mono bg-black text-white p-1 px-2">Auth: Init...</div>
         </footer>
 
@@ -134,8 +111,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // Added updateDoc to imports
-        import { getFirestore, collection, addDoc, updateDoc, onSnapshot, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // REMOVED: getDoc, setDoc (Unused)
+        import { getFirestore, collection, addDoc, updateDoc, onSnapshot, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // =================================================================
         //  CONFIGURATION SECTION
@@ -156,19 +133,12 @@
         let app, auth, db;
         
         try {
-            if (firebaseConfig.apiKey.includes("PASTE_YOUR")) {
-                document.getElementById('config-error-overlay').style.display = 'flex';
-                throw new Error("Config Placeholder Detected");
-            }
             app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             db = getFirestore(app);
-            
             setPersistence(auth, browserLocalPersistence).catch(e => console.error("Persistence Error:", e));
-
         } catch (e) {
              console.error(e);
-             throw e; 
         }
 
         let allArticles = []; 
@@ -178,6 +148,7 @@
         let dataListenerUnsubscribe = null;
 
         const mainContent = document.getElementById('main-content');
+        // REMOVED: const dateElement (Unused, handled by inline script)
         const searchInput = document.getElementById('search-input');
 
         async function init() {
@@ -236,16 +207,15 @@
                     return; 
                 }
                 currentView = 'submit';
-                renderSubmitForm(); // Clean submit
+                renderSubmitForm();
             } else if (hash.startsWith('#edit/')) {
-                // EDIT ROUTE
                 if (!auth.currentUser && !currentUser) { 
                     window.location.hash = '#login'; 
                     return; 
                 }
                 currentView = 'submit';
                 const articleId = hash.split('/')[1];
-                renderSubmitForm(articleId); // Pre-filled submit
+                renderSubmitForm(articleId);
             } else if (hash.startsWith('#article/')) {
                 currentView = 'article';
                 const articleId = hash.split('/')[1];
@@ -297,9 +267,6 @@
             
             lines.forEach(line => {
                 const trimmed = line.trim();
-                // Improved: Do not skip empty lines, but wrap them to preserve spacing
-                
-                // Check if it's a bullet list item
                 const listMatch = trimmed.match(/^([\*\-•])\s?(.*)/);
 
                 if (listMatch) {
@@ -310,8 +277,6 @@
                     html += `<li class="mb-1">${listMatch[2]}</li>`;
                 } else {
                     if (inList) { html += '</ul>'; inList = false; }
-                    
-                    // Use a div with whitespace-pre-wrap to respect the exact spacing and wrapping
                     html += `<div class="article-text-block">${line || '&nbsp;'}</div>`;
                 }
             });
@@ -343,13 +308,13 @@
 
             let html = `<div class="fade-in space-y-10">`;
             articlesToShow.forEach(article => {
-                const isGrayscale = article.isGrayscale !== undefined ? article.isGrayscale : false;
+                // Grayscale removed
                 html += `
                 <article class="flex flex-col sm:flex-row items-start border-b border-gray-200 pb-10 last:border-0">
                     <a href="#article/${article.id}" class="flex-shrink-0 w-full sm:w-48 cursor-pointer">
                         <img src="${article.imageUrl || 'https://placehold.co/192x128/cccccc/000000?text=No+Image&font=inter'}" 
                              alt="Thumbnail" 
-                             class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0 ${isGrayscale ? 'grayscale' : ''} hover:grayscale-0 transition-all duration-300">
+                             class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0 transition-all duration-300">
                     </a>
                     <div class="sm:ml-6 w-full">
                         <a href="#article/${article.id}"><h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors cursor-pointer hover:text-gray-600">${article.title || 'Untitled Article'}</h2></a>
@@ -373,7 +338,6 @@
             if (!article) { mainContent.innerHTML = `<div class="text-center mt-20">Loading article...</div>`; return; }
             const formattedContent = formatArticleText(article.content);
             
-            // Edit button logic
             let editBtn = '';
             if (currentUser) {
                 editBtn = `<a href="#edit/${article.id}" class="ml-4 text-sm font-bold uppercase text-blue-600 hover:underline">[EDIT ARTICLE]</a>`;
@@ -389,7 +353,7 @@
                     <div class="flex items-center space-x-2 text-sm text-gray-600 mb-8 border-b border-black pb-4">
                         <span class="font-bold text-black uppercase">By ${article.author}</span><span>•</span><span>${new Date(article.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <img src="${article.imageUrl || 'https://placehold.co/800x400/cccccc/000000?text=No+Image'}" class="w-full h-auto max-h-[500px] object-cover mb-8 rounded ${article.isGrayscale ? 'grayscale' : ''}">
+                    <img src="${article.imageUrl || 'https://placehold.co/800x400/cccccc/000000?text=No+Image'}" class="w-full h-auto max-h-[500px] object-cover mb-8 rounded">
                     
                     <div class="article-body font-inter text-gray-800 text-lg">
                         <p class="font-bold text-xl mb-6 italic">${article.summary}</p>
@@ -445,7 +409,6 @@
                 else if (email === "connor@jcjournal.com") authorName = "Connor O'Donnell";
             }
 
-            // EDIT MODE Logic
             let existingArticle = null;
             let formTitle = "Submit New Article";
             let btnText = "Publish";
@@ -455,7 +418,6 @@
                 if (existingArticle) {
                     formTitle = "Edit Article";
                     btnText = "Update Article";
-                    // Override author name with existing if editing
                     authorName = existingArticle.author || authorName;
                 }
             }
@@ -463,31 +425,15 @@
             mainContent.innerHTML = `
                 <div class="fade-in max-w-2xl mx-auto bg-white p-8 border-2 border-black mb-20">
                     <h2 class="text-3xl font-bold uppercase mb-6 text-center font-title-custom">${formTitle}</h2>
-                    
                     <form id="article-form" class="space-y-4">
-                        <div><label class="block text-xs font-bold uppercase mb-1">Article Title</label>
-                        <input type="text" id="title" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 placeholder-gray-400" placeholder="e.g. THE STATE OF THE WORLD" value="${existingArticle ? existingArticle.title : ''}"></div>
-                        
+                        <div><label class="block text-xs font-bold uppercase mb-1">Article Title</label><input type="text" id="title" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 placeholder-gray-400" placeholder="e.g. THE STATE OF THE WORLD" value="${existingArticle ? existingArticle.title : ''}"></div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div><label class="block text-xs font-bold uppercase mb-1">Author Name</label>
-                            <input type="text" id="author" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Your Name" value="${authorName}"></div>
-                            
-                            <div><label class="block text-xs font-bold uppercase mb-1">Image URL</label>
-                            <input type="text" id="imageUrl" placeholder="https://..." class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" value="${existingArticle ? existingArticle.imageUrl : ''}">
-                            <p class="text-[10px] text-gray-500 mt-1">Paste a link to an image (Imgur, etc)</p></div>
+                            <div><label class="block text-xs font-bold uppercase mb-1">Author Name</label><input type="text" id="author" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Your Name" value="${authorName}"></div>
+                            <div><label class="block text-xs font-bold uppercase mb-1">Image URL</label><input type="text" id="imageUrl" placeholder="https://..." class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" value="${existingArticle ? existingArticle.imageUrl : ''}"><p class="text-[10px] text-gray-500 mt-1">Paste a link to an image (Imgur, etc)</p></div>
                         </div>
-
-                        <div><label class="block text-xs font-bold uppercase mb-1">Short Summary</label>
-                        <textarea id="summary" rows="2" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Appears on the homepage...">${existingArticle ? existingArticle.summary : ''}</textarea></div>
-
-                        <div><label class="block text-xs font-bold uppercase mb-1">Full Content</label>
-                        <textarea id="content" rows="15" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Write here. Use - or * for automatic lists.">${existingArticle ? existingArticle.content : ''}</textarea>
-                        <p class="text-[10px] text-gray-500 mt-1">Start a line with - or * to create a bullet list.</p></div>
-
-                        <div class="pt-4 flex justify-between items-center">
-                            <a href="#" class="text-sm font-bold uppercase hover:text-red-500">Cancel</a>
-                            <button type="submit" class="bg-black text-white font-bold uppercase py-3 px-8 hover:bg-gray-800 transition-colors">${btnText}</button>
-                        </div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Short Summary</label><textarea id="summary" rows="2" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Appears on the homepage...">${existingArticle ? existingArticle.summary : ''}</textarea></div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Full Content</label><textarea id="content" rows="15" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Write here. Use - or * for automatic lists.">${existingArticle ? existingArticle.content : ''}</textarea><p class="text-[10px] text-gray-500 mt-1">Start a line with - or * to create a bullet list.</p></div>
+                        <div class="pt-4 flex justify-between items-center"><a href="#" class="text-sm font-bold uppercase hover:text-red-500">Cancel</a><button type="submit" class="bg-black text-white font-bold uppercase py-3 px-8 hover:bg-gray-800 transition-colors">${btnText}</button></div>
                     </form>
                 </div>`;
             
@@ -506,13 +452,11 @@
                     };
 
                     if (editId) {
-                        // UPDATE Existing
                         const docRef = doc(db, 'articles', editId);
                         await updateDoc(docRef, data);
                         alert("Article Updated!");
                         window.location.hash = `#article/${editId}`;
                     } else {
-                        // CREATE New
                         data.createdAt = Date.now();
                         data.submitterId = currentUser.uid;
                         await addDoc(collection(db, 'articles'), data);
