@@ -6,5 +6,5 @@
 <li><s>Make an article page/template - <b>PONGLE IS DOING THIS</b></s></li>
 <li>footer doesn't show on mobile</li>
 <li>website doesn't fit on mobile, goes off screen</li>
-<li>search doesn't include date posted</li>
+<li><s>search doesn't include date posted</s></li>
 </ul>
