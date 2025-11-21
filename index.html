@@ -20,10 +20,6 @@
       .font-inter { font-family: 'Inter', sans-serif; }
       .font-title-custom { font-family: 'GlacialIndifference-Bold', sans-serif; }
 
-      /* Hide scrollbar */
-      main { -ms-overflow-style: none; scrollbar-width: none; }
-      main::-webkit-scrollbar { display: none; }
-      
       .fade-in { animation: fadeIn 0.5s; }
       @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -33,7 +29,7 @@
       }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-      /* --- ARTICLE FORMATTING --- */
+      /* Article Formatting */
       .article-body {
           overflow-wrap: break-word;
           word-wrap: break-word;
@@ -58,16 +54,39 @@
       }
     </style>
 </head>
-<body class="bg-[#FFFDF3] font-inter text-black h-screen overflow-hidden flex flex-col">
+<!-- Min-height screen ensures footer stays down, but no overflow-hidden -->
+<body class="bg-[#FFFDF3] font-inter text-black flex flex-col min-h-screen">
 
-    <div class="container mx-auto p-4 sm:p-8 max-w-6xl flex flex-col h-full">
+    <div class="container mx-auto p-4 sm:p-8 max-w-6xl flex-grow">
 
-        <header class="mb-8 flex-shrink-0">
-            <div class="flex justify-between items-center border-black pb-2 mb-2">
-                <div class="border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-28 sm:w-44 uppercase cursor-pointer" onclick="window.location.hash=''">
-                    <span id="current-date"></span>
-                </div>
+        <header class="mb-8">
+            <!-- 
+               MOBILE LAYOUT (Flex-Col):
+               Row 1: Date | Search
+               Row 2: Title
+               
+               DESKTOP LAYOUT (Flex-Row):
+               Date | Title | Search
+            -->
+            <div class="flex flex-col lg:flex-row justify-between items-center border-black pb-4 mb-4 lg:pb-2 lg:mb-2 gap-6 lg:gap-0">
                 
+                <!-- Top Row on Mobile: Date & Search -->
+                <div class="w-full lg:w-auto flex justify-between items-center order-1 lg:order-1 lg:contents">
+                    
+                    <!-- Date Box -->
+                    <div class="order-1 border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-32 sm:w-44 uppercase cursor-pointer flex items-center justify-center" onclick="window.location.hash=''">
+                        <span id="current-date"></span>
+                    </div>
+
+                    <!-- Search Box (Moved here for mobile layout) -->
+                    <input type="text" id="search-input" placeholder="SEARCH" class="order-2 lg:order-3 border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-32 sm:w-44 uppercase bg-transparent focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
+                </div>
+
+                <!-- Title (Bottom on Mobile, Middle on Desktop) -->
+                <h1 class="order-2 lg:order-2 font-title-custom text-center text-6xl sm:text-8xl lg:text-9xl uppercase mx-0 lg:mx-4 cursor-pointer leading-none w-full lg:w-auto" onclick="window.location.hash=''">
+                        JCJournal
+                </h1>
+
                 <!-- Date Script -->
                 <script>
                     (function(){
@@ -77,42 +96,37 @@
                     })();
                 </script>
 
-                <h1 class="font-title-custom text-center text-5xl md:text-7xl lg:text-9xl uppercase mx-2 sm:mx-4 cursor-pointer" onclick="window.location.hash=''">
-                        JCJournal
-                </h1>
-                <input type="text" id="search-input" placeholder="SEARCH" class="border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-28 sm:w-44 uppercase bg-transparent focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
             </div>
+            
             <div class="border-b border-black"></div>
             <div class="border-b border-red-500 my-1"></div> 
             <div class="border-b border-black mb-4"></div>
-            <p class="text-center text-sm mb-4 max-w-4xl mx-auto">
+            <p class="text-center text-sm mb-4 max-w-4xl mx-auto px-4">
                 Most of important text writings and topical tanigble talking musings about with which the world is revolve. Truth is the most it important of all knowledge.
             </p>
             <div class="border-b border-black"></div>
         </header>
 
-        <main id="main-content" class="max-w-4xl mx-auto flex-1 overflow-y-auto overflow-x-hidden w-full relative">
+        <main id="main-content" class="max-w-4xl mx-auto w-full relative min-h-[300px]">
             <div class="loader"></div>
             <p id="status-msg" class="text-center text-sm text-gray-500">Connecting to database...</p>
         </main>
 
-        <footer class="border-t border-black pt-6 mt-12 text-center flex-shrink-0 relative">
-            <p class="text-xs text-gray-600 uppercase" id="footer-links">
-                © 2025 JCJournal. All Rights Reserved. 
-                <span class="mx-2">|</span> 
-                <a href="#login" class="hover:text-red-500 transition-colors font-bold">Staff Login</a>
-            </p>
-            <div id="auth-debug" class="absolute bottom-0 right-0 text-[10px] font-mono bg-black text-white p-1 px-2">Auth: Init...</div>
-        </footer>
-
     </div>
+
+    <footer class="border-t border-black pt-6 pb-10 mt-12 text-center relative bg-[#FFFDF3]">
+        <p class="text-xs text-gray-600 uppercase" id="footer-links">
+            © 2025 JCJournal. All Rights Reserved. 
+            <span class="mx-2">|</span> 
+            <a href="#login" class="hover:text-red-500 transition-colors font-bold">Staff Login</a>
+        </p>
+    </footer>
 
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // REMOVED: getDoc, setDoc (Unused)
-        import { getFirestore, collection, addDoc, updateDoc, onSnapshot, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, onSnapshot, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // =================================================================
         //  CONFIGURATION SECTION
@@ -136,9 +150,12 @@
             app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             db = getFirestore(app);
+            
             setPersistence(auth, browserLocalPersistence).catch(e => console.error("Persistence Error:", e));
+
         } catch (e) {
              console.error(e);
+             // No overlay, simply log error
         }
 
         let allArticles = []; 
@@ -148,7 +165,6 @@
         let dataListenerUnsubscribe = null;
 
         const mainContent = document.getElementById('main-content');
-        // REMOVED: const dateElement (Unused, handled by inline script)
         const searchInput = document.getElementById('search-input');
 
         async function init() {
@@ -162,11 +178,26 @@
 
             window.addEventListener('hashchange', handleRouting);
             setTimeout(handleRouting, 100); 
+            
+            // Global Window Scroll for Infinite Loading (Standard behavior)
+            window.addEventListener('scroll', () => {
+                if (currentView !== 'home') return;
+                const st = document.getElementById('scroll-trigger');
+                if (st) {
+                    const rect = st.getBoundingClientRect();
+                    // If element is close to entering viewport
+                    if (rect.top < window.innerHeight + 100) {
+                        if (displayedCount < allArticles.length) { 
+                            displayedCount += 5; 
+                            renderHome(); 
+                        }
+                    }
+                }
+            });
         }
 
         function updateFooterState() {
             const footerLinks = document.getElementById('footer-links');
-            const debugEl = document.getElementById('auth-debug');
             if (!footerLinks) return;
 
             const user = currentUser || auth.currentUser;
@@ -179,24 +210,23 @@
                     <span class="mx-2">|</span> 
                     <a href="#logout" class="hover:text-red-500 transition-colors">Logout</a>
                 `;
-                if(debugEl) { debugEl.textContent = `User: ${user.email}`; debugEl.style.background = "#dcfce7"; debugEl.style.color="black"; }
             } else {
                 footerLinks.innerHTML = `
                     © 2025 JCJournal. All Rights Reserved. 
                     <span class="mx-2">|</span> 
                     <a href="#login" class="hover:text-red-500 transition-colors font-bold">Staff Login</a>
                 `;
-                if(debugEl) { debugEl.textContent = "Guest"; debugEl.style.background = "#f3f4f6"; debugEl.style.color="black"; }
             }
         }
 
         function handleRouting() {
             const hash = window.location.hash;
             updateFooterState();
+            // Scroll top on navigation
+            window.scrollTo(0, 0);
 
             if (hash === '' || hash === '#') {
                 currentView = 'home';
-                if (mainContent) mainContent.scrollTop = 0;
                 if (allArticles.length > 0) renderHome();
             } else if (hash === '#login') {
                 currentView = 'login';
@@ -474,10 +504,11 @@
         }
 
         searchInput.addEventListener('input', () => { displayedCount = 5; if (currentView === 'home') renderHome(); });
-        mainContent.addEventListener('scroll', () => {
+        // Removed custom scroll event listener because default body scroll is handled by browser
+        window.addEventListener('scroll', () => {
             if (currentView !== 'home') return;
             const st = document.getElementById('scroll-trigger');
-            if (st && st.getBoundingClientRect().top < mainContent.getBoundingClientRect().bottom + 100) {
+            if (st && st.getBoundingClientRect().top < window.innerHeight + 100) {
                 if (displayedCount < allArticles.length) { displayedCount += 5; renderHome(); }
             }
         });
