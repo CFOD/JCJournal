@@ -1,379 +1,480 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JC Journal</title>
-    <link rel="icon" type="image/x-icon" href="icon.ico">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    
-    <style>
-      @font-face {
-        font-family: 'GlacialIndifference-Bold';
-        src: url('fonts/GlacialIndifference-Bold.otf') format('opentype');
-        font-weight: bold;
-        font-style: normal;
-      }
-      .font-inter { font-family: 'Inter', sans-serif; }
-      .font-title-custom { font-family: 'GlacialIndifference-Bold', sans-serif; }
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>JC Journal</title>
+        <link rel="icon" type="image/x-icon" href="icon.ico" />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap"
+            rel="stylesheet"
+        />
 
-      .fade-in { animation: fadeIn 0.5s; }
-      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        <style>
+            @font-face {
+                font-family: "GlacialIndifference-Bold";
+                src: url("fonts/GlacialIndifference-Bold.otf")
+                    format("opentype");
+                font-weight: bold;
+                font-style: normal;
+            }
+            .font-inter {
+                font-family: "Inter", sans-serif;
+            }
+            .font-title-custom {
+                font-family: "GlacialIndifference-Bold", sans-serif;
+            }
 
-      .loader {
-        border: 4px solid #f3f3f3; border-top: 4px solid #000; border-radius: 50%;
-        width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto;
-      }
-      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+            .fade-in {
+                animation: fadeIn 0.5s;
+            }
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
 
-      /* Article Formatting */
-      .article-body {
-          overflow-wrap: break-word;
-          word-wrap: break-word;
-          word-break: normal;
-          max-width: 100%;
-      }
-      
-      .article-text-block {
-          white-space: pre-wrap;
-          margin-bottom: 0.5em;
-          line-height: 1.6;
-          min-height: 1em;
-      }
+            .loader {
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #000;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                animation: spin 1s linear infinite;
+                margin: 20px auto;
+            }
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
 
-      .article-body ul { 
-          list-style-type: disc; 
-          padding-left: 2rem; 
-          margin-bottom: 1em; 
-      }
-      .article-body li { 
-          margin-bottom: 0.25rem; 
-      }
-    </style>
-</head>
-<!-- Min-height screen ensures footer stays down, but no overflow-hidden -->
-<body class="bg-[#FFFDF3] font-inter text-black flex flex-col min-h-screen">
+            /* Article Formatting */
+            .article-body {
+                overflow-wrap: break-word;
+                word-wrap: break-word;
+                word-break: normal;
+                max-width: 100%;
+            }
 
-    <div class="container mx-auto p-4 sm:p-8 max-w-6xl flex-grow">
+            .article-text-block {
+                white-space: pre-wrap;
+                margin-bottom: 0.5em;
+                line-height: 1.6;
+                min-height: 1em;
+            }
 
-        <header class="mb-8">
-            <!-- 
+            .article-body ul {
+                list-style-type: disc;
+                padding-left: 2rem;
+                margin-bottom: 1em;
+            }
+            .article-body li {
+                margin-bottom: 0.25rem;
+            }
+        </style>
+    </head>
+    <!-- Min-height screen ensures footer stays down, but no overflow-hidden -->
+    <body class="bg-[#FFFDF3] font-inter text-black flex flex-col min-h-screen">
+        <div class="container mx-auto p-4 sm:p-8 max-w-6xl flex-grow">
+            <header class="mb-8">
+                <!--
                MOBILE LAYOUT (Flex-Col):
                Row 1: Date | Search
                Row 2: Title
-               
+
                DESKTOP LAYOUT (Flex-Row):
                Date | Title | Search
             -->
-            <div class="flex flex-col lg:flex-row justify-between items-center border-black pb-4 mb-4 lg:pb-2 lg:mb-2 gap-6 lg:gap-0">
-                
-                <!-- Top Row on Mobile: Date & Search -->
-                <div class="w-full lg:w-auto flex justify-between items-center order-1 lg:order-1 lg:contents">
-                    
-                    <!-- Date Box -->
-                    <div class="order-1 border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-32 sm:w-44 uppercase cursor-pointer flex items-center justify-center" onclick="window.location.hash=''">
-                        <span id="current-date"></span>
+                <div
+                    class="flex flex-col lg:flex-row justify-between items-center border-black pb-4 mb-4 lg:pb-2 lg:mb-2 gap-6 lg:gap-0"
+                >
+                    <!-- Top Row on Mobile: Date & Search -->
+                    <div
+                        class="w-full lg:w-auto flex justify-between items-center order-1 lg:order-1 lg:contents"
+                    >
+                        <!-- Date Box -->
+                        <div
+                            class="order-1 border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-32 sm:w-44 uppercase cursor-pointer flex items-center justify-center"
+                            onclick="window.location.hash=''"
+                        >
+                            <span id="current-date"></span>
+                        </div>
+
+                        <!-- Search Box (Moved here for mobile layout) -->
+                        <input
+                            type="text"
+                            id="search-input"
+                            placeholder="SEARCH"
+                            class="order-2 lg:order-3 border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-32 sm:w-44 uppercase bg-transparent focus:outline-none focus:ring-2 focus:ring-red-500 transition-all"
+                        />
                     </div>
 
-                    <!-- Search Box (Moved here for mobile layout) -->
-                    <input type="text" id="search-input" placeholder="SEARCH" class="order-2 lg:order-3 border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-32 sm:w-44 uppercase bg-transparent focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
+                    <!-- Title (Bottom on Mobile, Middle on Desktop) -->
+                    <h1
+                        class="order-2 lg:order-2 font-title-custom text-center text-6xl sm:text-8xl lg:text-9xl uppercase mx-0 lg:mx-4 cursor-pointer leading-none w-full lg:w-auto"
+                        onclick="window.location.hash=''"
+                    >
+                        JCJournal
+                    </h1>
+
+                    <!-- Date Script -->
+                    <script>
+                        (function () {
+                            const d = new Date();
+                            const ops = {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                            };
+                            document.getElementById(
+                                "current-date",
+                            ).textContent = d
+                                .toLocaleDateString("en-US", ops)
+                                .toUpperCase();
+                        })();
+                    </script>
                 </div>
 
-                <!-- Title (Bottom on Mobile, Middle on Desktop) -->
-                <h1 class="order-2 lg:order-2 font-title-custom text-center text-6xl sm:text-8xl lg:text-9xl uppercase mx-0 lg:mx-4 cursor-pointer leading-none w-full lg:w-auto" onclick="window.location.hash=''">
-                        JCJournal
-                </h1>
+                <div class="border-b border-black"></div>
+                <div class="border-b border-red-500 my-1"></div>
+                <div class="border-b border-black mb-4"></div>
+                <p class="text-center text-sm mb-4 max-w-4xl mx-auto px-4">
+                    Most of important text writings and topical tanigble talking
+                    musings about with which the world is revolve. Truth is the
+                    most it important of all knowledge.
+                </p>
+                <div class="border-b border-black"></div>
+            </header>
 
-                <!-- Date Script -->
-                <script>
-                    (function(){
-                        const d = new Date();
-                        const ops = { year: 'numeric', month: 'long', day: 'numeric' };
-                        document.getElementById('current-date').textContent = d.toLocaleDateString('en-US', ops).toUpperCase();
-                    })();
-                </script>
+            <main
+                id="main-content"
+                class="max-w-4xl mx-auto w-full relative min-h-[300px]"
+            >
+                <div class="loader"></div>
+                <p id="status-msg" class="text-center text-sm text-gray-500">
+                    Connecting to database...
+                </p>
+            </main>
+        </div>
 
-            </div>
-            
-            <div class="border-b border-black"></div>
-            <div class="border-b border-red-500 my-1"></div> 
-            <div class="border-b border-black mb-4"></div>
-            <p class="text-center text-sm mb-4 max-w-4xl mx-auto px-4">
-                Most of important text writings and topical tanigble talking musings about with which the world is revolve. Truth is the most it important of all knowledge.
+        <footer
+            class="border-t border-black pt-6 pb-10 mt-12 text-center relative bg-[#FFFDF3]"
+        >
+            <p class="text-xs text-gray-600 uppercase" id="footer-links">
+                © 2025 JCJournal. All Rights Reserved.
+                <span class="mx-2">|</span>
+                <a
+                    href="#login"
+                    class="hover:text-red-500 transition-colors font-bold"
+                    >Staff Login</a
+                >
             </p>
-            <div class="border-b border-black"></div>
-        </header>
+        </footer>
 
-        <main id="main-content" class="max-w-4xl mx-auto w-full relative min-h-[300px]">
-            <div class="loader"></div>
-            <p id="status-msg" class="text-center text-sm text-gray-500">Connecting to database...</p>
-        </main>
+        <!-- Firebase SDKs -->
+        <script type="module">
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+            import {
+                getAuth,
+                onAuthStateChanged,
+                signInWithEmailAndPassword,
+                signOut,
+                setPersistence,
+                browserLocalPersistence,
+            } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+            import {
+                getFirestore,
+                collection,
+                addDoc,
+                updateDoc,
+                onSnapshot,
+                doc,
+                getDoc,
+                setDoc,
+            } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    </div>
+            // =================================================================
+            //  CONFIGURATION SECTION
+            //  Paste your Firebase keys inside this object.
+            // =================================================================
 
-    <footer class="border-t border-black pt-6 pb-10 mt-12 text-center relative bg-[#FFFDF3]">
-        <p class="text-xs text-gray-600 uppercase" id="footer-links">
-            © 2025 JCJournal. All Rights Reserved. 
-            <span class="mx-2">|</span> 
-            <a href="#login" class="hover:text-red-500 transition-colors font-bold">Staff Login</a>
-        </p>
-    </footer>
+            const firebaseConfig = {
+                apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
+                authDomain: "jc-journal.firebaseapp.com",
+                projectId: "jc-journal",
+                storageBucket: "jc-journal.firebasestorage.app",
+                messagingSenderId: "931803753012",
+                appId: "1:931803753012:web:fce867abf6794c180ff861",
+            };
 
-    <!-- Firebase SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, onSnapshot, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+            // =================================================================
 
-        // =================================================================
-        //  CONFIGURATION SECTION
-        //  Paste your Firebase keys inside this object.
-        // =================================================================
-        
-        const firebaseConfig = {
-			apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
-			authDomain: "jc-journal.firebaseapp.com",
-			projectId: "jc-journal",
-			storageBucket: "jc-journal.firebasestorage.app",
-			messagingSenderId: "931803753012",
-			appId: "1:931803753012:web:fce867abf6794c180ff861"
-        };
+            let app, auth, db;
 
-        // =================================================================
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
 
-        let app, auth, db;
-        
-        try {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-            
-            setPersistence(auth, browserLocalPersistence).catch(e => console.error("Persistence Error:", e));
+                setPersistence(auth, browserLocalPersistence).catch((e) =>
+                    console.error("Persistence Error:", e),
+                );
+            } catch (e) {
+                console.error(e);
+                // No overlay, simply log error
+            }
 
-        } catch (e) {
-             console.error(e);
-             // No overlay, simply log error
-        }
+            let allArticles = [];
+            let displayedCount = 5;
+            let currentUser = null;
+            let currentView = "home";
+            let dataListenerUnsubscribe = null;
 
-        let allArticles = []; 
-        let displayedCount = 5; 
-        let currentUser = null; 
-        let currentView = 'home'; 
-        let dataListenerUnsubscribe = null;
+            const mainContent = document.getElementById("main-content");
+            const searchInput = document.getElementById("search-input");
 
-        const mainContent = document.getElementById('main-content');
-        const searchInput = document.getElementById('search-input');
+            async function init() {
+                onAuthStateChanged(auth, (user) => {
+                    currentUser = user;
+                    updateFooterState();
+                    if (!dataListenerUnsubscribe) {
+                        setupDataListener();
+                    }
+                });
 
-        async function init() {
-            onAuthStateChanged(auth, (user) => {
-                currentUser = user;
-                updateFooterState(); 
-                if (!dataListenerUnsubscribe) {
-                    setupDataListener();
-                }
-            });
+                window.addEventListener("hashchange", handleRouting);
+                setTimeout(handleRouting, 100);
 
-            window.addEventListener('hashchange', handleRouting);
-            setTimeout(handleRouting, 100); 
-            
-            // Global Window Scroll for Infinite Loading (Standard behavior)
-            window.addEventListener('scroll', () => {
-                if (currentView !== 'home') return;
-                const st = document.getElementById('scroll-trigger');
-                if (st) {
-                    const rect = st.getBoundingClientRect();
-                    // If element is close to entering viewport
-                    if (rect.top < window.innerHeight + 100) {
-                        if (displayedCount < allArticles.length) { 
-                            displayedCount += 5; 
-                            renderHome(); 
+                // Global Window Scroll for Infinite Loading (Standard behavior)
+                window.addEventListener("scroll", () => {
+                    if (currentView !== "home") return;
+                    const st = document.getElementById("scroll-trigger");
+                    if (st) {
+                        const rect = st.getBoundingClientRect();
+                        // If element is close to entering viewport
+                        if (rect.top < window.innerHeight + 100) {
+                            if (displayedCount < allArticles.length) {
+                                displayedCount += 5;
+                                renderHome();
+                            }
                         }
                     }
-                }
-            });
-        }
+                });
+            }
 
-        function updateFooterState() {
-            const footerLinks = document.getElementById('footer-links');
-            if (!footerLinks) return;
+            function updateFooterState() {
+                const footerLinks = document.getElementById("footer-links");
+                if (!footerLinks) return;
 
-            const user = currentUser || auth.currentUser;
+                const user = currentUser || auth.currentUser;
 
-            if (user) {
-                footerLinks.innerHTML = `
-                    © 2025 JCJournal. All Rights Reserved. 
-                    <span class="mx-2">|</span> 
+                if (user) {
+                    footerLinks.innerHTML = `
+                    © 2025 JCJournal. All Rights Reserved.
+                    <span class="mx-2">|</span>
                     <a href="#submit" class="hover:text-red-500 transition-colors font-bold">Submit Article</a>
-                    <span class="mx-2">|</span> 
+                    <span class="mx-2">|</span>
                     <a href="#logout" class="hover:text-red-500 transition-colors">Logout</a>
                 `;
-            } else {
-                footerLinks.innerHTML = `
-                    © 2025 JCJournal. All Rights Reserved. 
-                    <span class="mx-2">|</span> 
+                } else {
+                    footerLinks.innerHTML = `
+                    © 2025 JCJournal. All Rights Reserved.
+                    <span class="mx-2">|</span>
                     <a href="#login" class="hover:text-red-500 transition-colors font-bold">Staff Login</a>
                 `;
-            }
-        }
-
-        function handleRouting() {
-            const hash = window.location.hash;
-            updateFooterState();
-            // Scroll top on navigation
-            window.scrollTo(0, 0);
-
-            if (hash === '' || hash === '#') {
-                currentView = 'home';
-                if (allArticles.length > 0) renderHome();
-            } else if (hash === '#login') {
-                currentView = 'login';
-                renderLoginForm();
-            } else if (hash === '#submit') {
-                if (!auth.currentUser && !currentUser) { 
-                    window.location.hash = '#login'; 
-                    return; 
                 }
-                currentView = 'submit';
-                renderSubmitForm();
-            } else if (hash.startsWith('#edit/')) {
-                if (!auth.currentUser && !currentUser) { 
-                    window.location.hash = '#login'; 
-                    return; 
-                }
-                currentView = 'submit';
-                const articleId = hash.split('/')[1];
-                renderSubmitForm(articleId);
-            } else if (hash.startsWith('#article/')) {
-                currentView = 'article';
-                const articleId = hash.split('/')[1];
-                if (allArticles.length > 0) renderArticleDetail(articleId);
-            } else if (hash === '#logout') {
-                signOut(auth).then(() => { 
-                    currentUser = null;
-                    window.location.hash = ''; 
-                });
             }
-        }
 
-        function setupDataListener() {
-            const articlesRef = collection(db, 'articles');
-            
-            dataListenerUnsubscribe = onSnapshot(articlesRef, async (snapshot) => {
-                allArticles = [];
-                snapshot.forEach((doc) => {
-                    allArticles.push({ id: doc.id, ...doc.data() });
+            function handleRouting() {
+                const hash = window.location.hash;
+                updateFooterState();
+                // Scroll top on navigation
+                window.scrollTo(0, 0);
+
+                if (hash === "" || hash === "#") {
+                    currentView = "home";
+                    if (allArticles.length > 0) renderHome();
+                } else if (hash === "#login") {
+                    currentView = "login";
+                    renderLoginForm();
+                } else if (hash === "#submit") {
+                    if (!auth.currentUser && !currentUser) {
+                        window.location.hash = "#login";
+                        return;
+                    }
+                    currentView = "submit";
+                    renderSubmitForm();
+                } else if (hash.startsWith("#edit/")) {
+                    if (!auth.currentUser && !currentUser) {
+                        window.location.hash = "#login";
+                        return;
+                    }
+                    currentView = "submit";
+                    const articleId = hash.split("/")[1];
+                    renderSubmitForm(articleId);
+                } else if (hash.startsWith("#article/")) {
+                    currentView = "article";
+                    const articleId = hash.split("/")[1];
+                    if (allArticles.length > 0) renderArticleDetail(articleId);
+                } else if (hash === "#logout") {
+                    signOut(auth).then(() => {
+                        currentUser = null;
+                        window.location.hash = "";
+                    });
+                }
+            }
+
+            function setupDataListener() {
+                const articlesRef = collection(db, "articles");
+
+                dataListenerUnsubscribe = onSnapshot(
+                    articlesRef,
+                    async (snapshot) => {
+                        allArticles = [];
+                        snapshot.forEach((doc) => {
+                            allArticles.push({ id: doc.id, ...doc.data() });
+                        });
+
+                        if (allArticles.length === 0) {
+                            if (currentView === "home") renderHome();
+                            return;
+                        }
+
+                        allArticles.sort(
+                            (a, b) => (b.createdAt || 0) - (a.createdAt || 0),
+                        );
+
+                        if (currentView === "home") renderHome();
+                        else if (currentView === "article") {
+                            const articleId =
+                                window.location.hash.split("/")[1];
+                            renderArticleDetail(articleId);
+                        }
+                    },
+                    (error) => {
+                        console.error("Error fetching articles:", error);
+                        let msg = "Error connecting to database.";
+                        if (error.code === "permission-denied") {
+                            msg =
+                                "Permission Denied.<br>Ensure Firestore Rules allow public read access.";
+                        }
+                        mainContent.innerHTML = `<div class="text-center text-red-500 mt-10">${msg}</div>`;
+                    },
+                );
+            }
+
+            function formatArticleText(text) {
+                if (!text) return "<p>No content.</p>";
+                const lines = text.split("\n");
+                let html = "";
+                let inList = false;
+
+                lines.forEach((line) => {
+                    const trimmed = line.trim();
+                    const listMatch = trimmed.match(/^([\*\-•])\s?(.*)/);
+
+                    if (listMatch) {
+                        if (!inList) {
+                            html += '<ul class="list-disc pl-5 mb-4">';
+                            inList = true;
+                        }
+                        html += `<li class="mb-1">${listMatch[2]}</li>`;
+                    } else {
+                        if (inList) {
+                            html += "</ul>";
+                            inList = false;
+                        }
+                        html += `<div class="article-text-block">${line || "&nbsp;"}</div>`;
+                    }
+                });
+                if (inList) html += "</ul>";
+                return html;
+            }
+
+            function renderHome() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const filteredArticles = allArticles.filter((a) => {
+                    const dateStr = new Date(a.createdAt)
+                        .toLocaleDateString()
+                        .toLowerCase();
+                    return (
+                        (a.title &&
+                            a.title.toLowerCase().includes(searchTerm)) ||
+                        (a.summary &&
+                            a.summary.toLowerCase().includes(searchTerm)) ||
+                        (a.author &&
+                            a.author.toLowerCase().includes(searchTerm)) ||
+                        (a.content &&
+                            a.content.toLowerCase().includes(searchTerm)) ||
+                        dateStr.includes(searchTerm)
+                    );
                 });
 
-                if (allArticles.length === 0) {
-                    if (currentView === 'home') renderHome();
+                const articlesToShow = filteredArticles.slice(
+                    0,
+                    displayedCount,
+                );
+
+                if (articlesToShow.length === 0) {
+                    if (allArticles.length === 0) {
+                        mainContent.innerHTML = `<div class="text-center py-10 text-xl font-bold">No articles yet.<br><span class="text-sm font-normal">Login to post the first one.</span></div>`;
+                    } else {
+                        mainContent.innerHTML = `<div class="text-center py-10 text-xl font-bold">No articles found.</div>`;
+                    }
                     return;
                 }
 
-                allArticles.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-                if (currentView === 'home') renderHome();
-                else if (currentView === 'article') {
-                    const articleId = window.location.hash.split('/')[1];
-                    renderArticleDetail(articleId);
-                }
-            }, (error) => {
-                console.error("Error fetching articles:", error);
-                let msg = "Error connecting to database.";
-                if (error.code === 'permission-denied') {
-                    msg = "Permission Denied.<br>Ensure Firestore Rules allow public read access.";
-                }
-                mainContent.innerHTML = `<div class="text-center text-red-500 mt-10">${msg}</div>`;
-            });
-        }
-
-        function formatArticleText(text) {
-            if (!text) return '<p>No content.</p>';
-            const lines = text.split('\n');
-            let html = '';
-            let inList = false;
-            
-            lines.forEach(line => {
-                const trimmed = line.trim();
-                const listMatch = trimmed.match(/^([\*\-•])\s?(.*)/);
-
-                if (listMatch) {
-                    if (!inList) { 
-                        html += '<ul class="list-disc pl-5 mb-4">'; 
-                        inList = true; 
-                    }
-                    html += `<li class="mb-1">${listMatch[2]}</li>`;
-                } else {
-                    if (inList) { html += '</ul>'; inList = false; }
-                    html += `<div class="article-text-block">${line || '&nbsp;'}</div>`;
-                }
-            });
-            if (inList) html += '</ul>';
-            return html;
-        }
-
-        function renderHome() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const filteredArticles = allArticles.filter(a => {
-                const dateStr = new Date(a.createdAt).toLocaleDateString().toLowerCase();
-                return (a.title && a.title.toLowerCase().includes(searchTerm)) || 
-                       (a.summary && a.summary.toLowerCase().includes(searchTerm)) ||
-                       (a.author && a.author.toLowerCase().includes(searchTerm)) ||
-                       (a.content && a.content.toLowerCase().includes(searchTerm)) ||
-                       (dateStr.includes(searchTerm));
-            });
-
-            const articlesToShow = filteredArticles.slice(0, displayedCount);
-            
-            if (articlesToShow.length === 0) {
-                if (allArticles.length === 0) {
-                     mainContent.innerHTML = `<div class="text-center py-10 text-xl font-bold">No articles yet.<br><span class="text-sm font-normal">Login to post the first one.</span></div>`;
-                } else {
-                     mainContent.innerHTML = `<div class="text-center py-10 text-xl font-bold">No articles found.</div>`;
-                }
-                return;
-            }
-
-            let html = `<div class="fade-in space-y-10">`;
-            articlesToShow.forEach(article => {
-                // Grayscale removed
-                html += `
+                let html = `<div class="fade-in space-y-10">`;
+                articlesToShow.forEach((article) => {
+                    // Grayscale removed
+                    html += `
                 <article class="flex flex-col sm:flex-row items-start border-b border-gray-200 pb-10 last:border-0">
                     <a href="#article/${article.id}" class="flex-shrink-0 w-full sm:w-48 cursor-pointer">
-                        <img src="${article.imageUrl || 'https://placehold.co/192x128/cccccc/000000?text=No+Image&font=inter'}" 
-                             alt="Thumbnail" 
+                        <img src="${article.imageUrl || "https://placehold.co/192x128/cccccc/000000?text=No+Image&font=inter"}"
+                             alt="Thumbnail"
                              class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0 transition-all duration-300">
                     </a>
                     <div class="sm:ml-6 w-full">
-                        <a href="#article/${article.id}"><h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors cursor-pointer hover:text-gray-600">${article.title || 'Untitled Article'}</h2></a>
-                        <p class="text-base mb-3 text-gray-800">${article.summary || ''}</p>
+                        <a href="#article/${article.id}"><h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors cursor-pointer hover:text-gray-600">${article.title || "Untitled Article"}</h2></a>
+                        <p class="text-base mb-3 text-gray-800">${article.summary || ""}</p>
                         <div class="flex items-center space-x-3">
                             <a href="#article/${article.id}" class="bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">Read More</a>
-                            <span class="text-sm text-gray-600">by ${article.author || 'Unknown'}</span>
+                            <span class="text-sm text-gray-600">by ${article.author || "Unknown"}</span>
                         </div>
                     </div>
                 </article>`;
-            });
-            if (articlesToShow.length < filteredArticles.length) {
-                html += `<div id="scroll-trigger" class="text-center text-gray-500 py-8 font-bold">Scroll for more...</div>`;
-            }
-            html += `</div>`;
-            mainContent.innerHTML = html;
-        }
-
-        function renderArticleDetail(id) {
-            const article = allArticles.find(a => a.id === id);
-            if (!article) { mainContent.innerHTML = `<div class="text-center mt-20">Loading article...</div>`; return; }
-            const formattedContent = formatArticleText(article.content);
-            
-            let editBtn = '';
-            if (currentUser) {
-                editBtn = `<a href="#edit/${article.id}" class="ml-4 text-sm font-bold uppercase text-blue-600 hover:underline">[EDIT ARTICLE]</a>`;
+                });
+                if (articlesToShow.length < filteredArticles.length) {
+                    html += `<div id="scroll-trigger" class="text-center text-gray-500 py-8 font-bold">Scroll for more...</div>`;
+                }
+                html += `</div>`;
+                mainContent.innerHTML = html;
             }
 
-            mainContent.innerHTML = `
+            function renderArticleDetail(id) {
+                const article = allArticles.find((a) => a.id === id);
+                if (!article) {
+                    mainContent.innerHTML = `<div class="text-center mt-20">Loading article...</div>`;
+                    return;
+                }
+                const formattedContent = formatArticleText(article.content);
+
+                let editBtn = "";
+                if (currentUser) {
+                    editBtn = `<a href="#edit/${article.id}" class="ml-4 text-sm font-bold uppercase text-blue-600 hover:underline">[EDIT ARTICLE]</a>`;
+                }
+
+                mainContent.innerHTML = `
                 <div class="fade-in pb-20 max-w-full">
                     <div class="flex items-center mb-6">
                         <a href="#" class="inline-block text-sm font-bold uppercase border-b border-black hover:text-red-500">← Back to Home</a>
@@ -383,18 +484,18 @@
                     <div class="flex items-center space-x-2 text-sm text-gray-600 mb-8 border-b border-black pb-4">
                         <span class="font-bold text-black uppercase">By ${article.author}</span><span>•</span><span>${new Date(article.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <img src="${article.imageUrl || 'https://placehold.co/800x400/cccccc/000000?text=No+Image'}" class="w-full h-auto max-h-[500px] object-cover mb-8 rounded">
-                    
+                    <img src="${article.imageUrl || "https://placehold.co/800x400/cccccc/000000?text=No+Image"}" class="w-full h-auto max-h-[500px] object-cover mb-8 rounded">
+
                     <div class="article-body font-inter text-gray-800 text-lg">
                         <p class="font-bold text-xl mb-6 italic">${article.summary}</p>
                         ${formattedContent}
                     </div>
                 </div>`;
-        }
-        
-        function renderLoginForm() {
-            if (currentUser && !currentUser.isAnonymous) {
-                 mainContent.innerHTML = `
+            }
+
+            function renderLoginForm() {
+                if (currentUser && !currentUser.isAnonymous) {
+                    mainContent.innerHTML = `
                     <div class="fade-in max-w-md mx-auto bg-white p-8 border-2 border-black mb-20 mt-10 text-center">
                         <h2 class="text-2xl font-bold uppercase mb-4 font-title-custom">You are logged in</h2>
                         <p class="mb-6">Welcome, ${currentUser.email}</p>
@@ -403,10 +504,10 @@
                         <button onclick="window.location.hash='#logout'" class="block w-full mt-4 border-2 border-red-500 text-red-500 font-bold uppercase py-3 px-8 hover:bg-red-50 transition-colors">Log Out</button>
                     </div>
                 `;
-                return;
-            }
+                    return;
+                }
 
-             mainContent.innerHTML = `
+                mainContent.innerHTML = `
                 <div class="fade-in max-w-md mx-auto bg-white p-8 border-2 border-black mb-20 mt-10">
                     <h2 class="text-3xl font-bold uppercase mb-6 text-center font-title-custom">Staff Login</h2>
                     <form id="login-form" class="space-y-4">
@@ -416,104 +517,151 @@
                         <p id="login-error" class="text-red-500 text-center text-sm font-bold mt-2"></p>
                     </form>
                 </div>`;
-            document.getElementById('login-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                try {
-                    const cred = await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
-                    currentUser = cred.user;
-                    updateFooterState();
-                    setTimeout(() => { window.location.hash = ''; }, 200);
-                } catch (error) {
-                    let msg = "Invalid email or password.";
-                    if (error.code === 'auth/invalid-credential') msg = "Incorrect email or password.";
-                    document.getElementById('login-error').textContent = msg;
-                }
-            });
-        }
-
-        function renderSubmitForm(editId = null) {
-            let authorName = "";
-            if (currentUser && currentUser.email) {
-                const email = currentUser.email.toLowerCase();
-                if (email === "jack@jcjournal.com") authorName = "Jack Pendry";
-                else if (email === "connor@jcjournal.com") authorName = "Connor O'Donnell";
+                document
+                    .getElementById("login-form")
+                    .addEventListener("submit", async (e) => {
+                        e.preventDefault();
+                        try {
+                            const cred = await signInWithEmailAndPassword(
+                                auth,
+                                document.getElementById("email").value,
+                                document.getElementById("password").value,
+                            );
+                            currentUser = cred.user;
+                            updateFooterState();
+                            setTimeout(() => {
+                                window.location.hash = "";
+                            }, 200);
+                        } catch (error) {
+                            let msg = "Invalid email or password.";
+                            if (error.code === "auth/invalid-credential")
+                                msg = "Incorrect email or password.";
+                            document.getElementById("login-error").textContent =
+                                msg;
+                        }
+                    });
             }
 
-            let existingArticle = null;
-            let formTitle = "Submit New Article";
-            let btnText = "Publish";
-
-            if (editId) {
-                existingArticle = allArticles.find(a => a.id === editId);
-                if (existingArticle) {
-                    formTitle = "Edit Article";
-                    btnText = "Update Article";
-                    authorName = existingArticle.author || authorName;
+            function renderSubmitForm(editId = null) {
+                let authorName = "";
+                if (currentUser && currentUser.email) {
+                    const email = currentUser.email.toLowerCase();
+                    if (email === "jack@jcjournal.com")
+                        authorName = "Jack Pendry";
+                    else if (email === "connor@jcjournal.com")
+                        authorName = "Connor O'Donnell";
                 }
-            }
 
-            mainContent.innerHTML = `
+                let existingArticle = null;
+                let formTitle = "Submit New Article";
+                let btnText = "Publish";
+
+                if (editId) {
+                    existingArticle = allArticles.find((a) => a.id === editId);
+                    if (existingArticle) {
+                        formTitle = "Edit Article";
+                        btnText = "Update Article";
+                        authorName = existingArticle.author || authorName;
+                    }
+                }
+
+                mainContent.innerHTML = `
                 <div class="fade-in max-w-2xl mx-auto bg-white p-8 border-2 border-black mb-20">
                     <h2 class="text-3xl font-bold uppercase mb-6 text-center font-title-custom">${formTitle}</h2>
                     <form id="article-form" class="space-y-4">
-                        <div><label class="block text-xs font-bold uppercase mb-1">Article Title</label><input type="text" id="title" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 placeholder-gray-400" placeholder="e.g. THE STATE OF THE WORLD" value="${existingArticle ? existingArticle.title : ''}"></div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Article Title</label><input type="text" id="title" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 placeholder-gray-400" placeholder="e.g. THE STATE OF THE WORLD" value="${existingArticle ? existingArticle.title : ""}"></div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div><label class="block text-xs font-bold uppercase mb-1">Author Name</label><input type="text" id="author" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Your Name" value="${authorName}"></div>
-                            <div><label class="block text-xs font-bold uppercase mb-1">Image URL</label><input type="text" id="imageUrl" placeholder="https://..." class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" value="${existingArticle ? existingArticle.imageUrl : ''}"><p class="text-[10px] text-gray-500 mt-1">Paste a link to an image (Imgur, etc)</p></div>
+                            <div><label class="block text-xs font-bold uppercase mb-1">Image URL</label><input type="text" id="imageUrl" placeholder="https://..." class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" value="${existingArticle ? existingArticle.imageUrl : ""}"><p class="text-[10px] text-gray-500 mt-1">Paste a link to an image (Imgur, etc)</p></div>
                         </div>
-                        <div><label class="block text-xs font-bold uppercase mb-1">Short Summary</label><textarea id="summary" rows="2" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Appears on the homepage...">${existingArticle ? existingArticle.summary : ''}</textarea></div>
-                        <div><label class="block text-xs font-bold uppercase mb-1">Full Content</label><textarea id="content" rows="15" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Write here. Use - or * for automatic lists.">${existingArticle ? existingArticle.content : ''}</textarea><p class="text-[10px] text-gray-500 mt-1">Start a line with - or * to create a bullet list.</p></div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Short Summary</label><textarea id="summary" rows="2" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Appears on the homepage...">${existingArticle ? existingArticle.summary : ""}</textarea></div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Full Content</label><textarea id="content" rows="15" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Write here. Use - or * for automatic lists.">${existingArticle ? existingArticle.content : ""}</textarea><p class="text-[10px] text-gray-500 mt-1">Start a line with - or * to create a bullet list.</p></div>
                         <div class="pt-4 flex justify-between items-center"><a href="#" class="text-sm font-bold uppercase hover:text-red-500">Cancel</a><button type="submit" class="bg-black text-white font-bold uppercase py-3 px-8 hover:bg-gray-800 transition-colors">${btnText}</button></div>
                     </form>
                 </div>`;
-            
-            document.getElementById('article-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const btn = e.target.querySelector('button');
-                btn.textContent = "Processing..."; btn.disabled = true;
-                try {
-                    const data = {
-                        title: document.getElementById('title').value,
-                        author: document.getElementById('author').value,
-                        imageUrl: document.getElementById('imageUrl').value,
-                        summary: document.getElementById('summary').value,
-                        content: document.getElementById('content').value,
-                        isGrayscale: false 
-                    };
 
-                    if (editId) {
-                        const docRef = doc(db, 'articles', editId);
-                        await updateDoc(docRef, data);
-                        alert("Article Updated!");
-                        window.location.hash = `#article/${editId}`;
-                    } else {
-                        data.createdAt = Date.now();
-                        data.submitterId = currentUser.uid;
-                        await addDoc(collection(db, 'articles'), data);
-                        alert("Article Published!");
-                        window.location.hash = ''; 
+                // SAFELY SET VALUES VIA JS TO AVOID HTML INJECTION ISSUES
+                if (existingArticle) {
+                    document.getElementById("title").value =
+                        existingArticle.title || "";
+                    document.getElementById("author").value =
+                        existingArticle.author || "";
+                    document.getElementById("imageUrl").value =
+                        existingArticle.imageUrl || "";
+                    document.getElementById("summary").value =
+                        existingArticle.summary || "";
+                    document.getElementById("content").value =
+                        existingArticle.content || "";
+                } else {
+                    // New Article - Set Autofill Author
+                    document.getElementById("author").value = authorName;
+                }
+
+                document
+                    .getElementById("article-form")
+                    .addEventListener("submit", async (e) => {
+                        e.preventDefault();
+                        const btn = e.target.querySelector("button");
+                        btn.textContent = "Processing...";
+                        btn.disabled = true;
+                        try {
+                            const data = {
+                                title: document.getElementById("title").value,
+                                author: document.getElementById("author").value,
+                                imageUrl:
+                                    document.getElementById("imageUrl").value,
+                                summary:
+                                    document.getElementById("summary").value,
+                                content:
+                                    document.getElementById("content").value,
+                                isGrayscale: false,
+                            };
+
+                            if (editId) {
+                                const docRef = doc(db, "articles", editId);
+                                await updateDoc(docRef, data);
+                                alert("Article Updated!");
+                                window.location.hash = `#article/${editId}`;
+                            } else {
+                                data.createdAt = Date.now();
+                                data.submitterId = currentUser.uid;
+                                await addDoc(collection(db, "articles"), data);
+                                alert("Article Published!");
+                                window.location.hash = "";
+                            }
+                        } catch (error) {
+                            console.error("Error submitting:", error);
+                            let msg = error.code || error.message;
+                            if (error.code === "permission-denied")
+                                msg =
+                                    "Permission Denied. You may not be authorized to write.";
+                            alert(`Error: ${msg}`);
+                            btn.textContent = btnText;
+                            btn.disabled = false;
+                        }
+                    });
+            }
+
+            searchInput.addEventListener("input", () => {
+                displayedCount = 5;
+                if (currentView === "home") renderHome();
+            });
+            // Removed custom scroll event listener because default body scroll is handled by browser
+            window.addEventListener("scroll", () => {
+                if (currentView !== "home") return;
+                const st = document.getElementById("scroll-trigger");
+                if (
+                    st &&
+                    st.getBoundingClientRect().top < window.innerHeight + 100
+                ) {
+                    if (displayedCount < allArticles.length) {
+                        displayedCount += 5;
+                        renderHome();
                     }
-                } catch (error) {
-                    console.error("Error submitting:", error);
-                    let msg = error.code || error.message;
-                    if (error.code === 'permission-denied') msg = "Permission Denied. You may not be authorized to write.";
-                    alert(`Error: ${msg}`);
-                    btn.textContent = btnText; btn.disabled = false;
                 }
             });
-        }
 
-        searchInput.addEventListener('input', () => { displayedCount = 5; if (currentView === 'home') renderHome(); });
-        // Removed custom scroll event listener because default body scroll is handled by browser
-        window.addEventListener('scroll', () => {
-            if (currentView !== 'home') return;
-            const st = document.getElementById('scroll-trigger');
-            if (st && st.getBoundingClientRect().top < window.innerHeight + 100) {
-                if (displayedCount < allArticles.length) { displayedCount += 5; renderHome(); }
-            }
-        });
-
-        init();
-    </script>
-</body>
+            init();
+        </script>
+    </body>
 </html>
