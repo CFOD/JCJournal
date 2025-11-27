@@ -366,7 +366,6 @@
             function formatArticleText(text) {
                 if (!text) return "<p>No content.</p>";
 
-                // Split text into lines to process line-by-line
                 const lines = text.split("\n");
                 let html = "";
                 let inList = false;
@@ -376,7 +375,6 @@
                     return str.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
                 };
 
-                // Loop through every line (This was missing in your code!)
                 lines.forEach((line) => {
                     const listMatch = line.match(/^[\-\*]\s+(.*)/);
 
@@ -589,7 +587,18 @@
                 </div>`;
 
                 // Handle autofill if creating new
-                if (!existingArticle) {
+                if (existingArticle) {
+                    document.getElementById("title").value =
+                        existingArticle.title || "";
+                    document.getElementById("author").value =
+                        existingArticle.author || "";
+                    document.getElementById("imageUrl").value =
+                        existingArticle.imageUrl || "";
+                    document.getElementById("summary").value =
+                        existingArticle.summary || "";
+                    document.getElementById("content").value =
+                        existingArticle.content || "";
+                } else {
                     document.getElementById("author").value = authorName;
                 }
 
