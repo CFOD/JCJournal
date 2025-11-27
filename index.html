@@ -384,23 +384,22 @@
 
                 const processFormatting = (str) => {
                     // Replace **text** with <strong>text</strong>
-                    return str.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    return str.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
                 };
 
-                    if (listMatch) {
-                        if (!inList) {
-                            html += '<ul class="list-disc pl-5 mb-4">';
-                            inList = true;
-                        }
-                        html += `<li class="mb-1">${listMatch[2]}</li>`;
-                    } else {
-                        if (inList) {
-                            html += "</ul>";
-                            inList = false;
-                        }
-                        html += `<div class="article-text-block">${line || "&nbsp;"}</div>`;
+                if (listMatch) {
+                    if (!inList) {
+                        html += '<ul class="list-disc pl-5 mb-4">';
+                        inList = true;
                     }
-                };
+                    html += `<li class="mb-1">${listMatch[2]}</li>`;
+                } else {
+                    if (inList) {
+                        html += "</ul>";
+                        inList = false;
+                    }
+                    html += `<div class="article-text-block">${line || "&nbsp;"}</div>`;
+                }
                 if (inList) html += "</ul>";
                 return html;
             }
