@@ -4,7 +4,6 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>JC Journal</title>
-        <link rel="icon" type="image/x-icon" href="icon.ico" />
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -26,6 +25,8 @@
             }
             .font-title-custom {
                 font-family: "GlacialIndifference-Bold", sans-serif;
+                /* Fallback if local font fails */
+                font-weight: 900;
             }
 
             .fade-in {
@@ -86,18 +87,9 @@
             }
         </style>
     </head>
-    <!-- Min-height screen ensures footer stays down, but no overflow-hidden -->
     <body class="bg-[#FFFDF3] font-inter text-black flex flex-col min-h-screen">
         <div class="container mx-auto p-4 sm:p-8 max-w-6xl flex-grow">
             <header class="mb-8">
-                <!--
-               MOBILE LAYOUT (Flex-Col):
-               Row 1: Date | Search
-               Row 2: Title
-
-               DESKTOP LAYOUT (Flex-Row):
-               Date | Title | Search
-            -->
                 <div
                     class="flex flex-col lg:flex-row justify-between items-center border-black pb-4 mb-4 lg:pb-2 lg:mb-2 gap-6 lg:gap-0"
                 >
@@ -107,30 +99,29 @@
                     >
                         <!-- Date Box -->
                         <div
-                            class="order-1 border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-32 sm:w-44 uppercase cursor-pointer flex items-center justify-center"
+                            class="order-1 border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-32 sm:w-44 uppercase cursor-pointer flex items-center justify-center hover:bg-black hover:text-white transition-colors"
                             onclick="window.location.hash=''"
                         >
                             <span id="current-date"></span>
                         </div>
 
-                        <!-- Search Box (Moved here for mobile layout) -->
+                        <!-- Search Box -->
                         <input
                             type="text"
                             id="search-input"
                             placeholder="SEARCH"
-                            class="order-2 lg:order-3 border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-32 sm:w-44 uppercase bg-transparent focus:outline-none focus:ring-2 focus:ring-red-500 transition-all"
+                            class="order-2 lg:order-3 border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-32 sm:w-44 uppercase bg-transparent focus:outline-none focus:ring-2 focus:ring-red-500 transition-all placeholder-black"
                         />
                     </div>
 
-                    <!-- Title (Bottom on Mobile, Middle on Desktop) -->
+                    <!-- Title -->
                     <h1
-                        class="order-2 lg:order-2 font-title-custom text-center text-6xl sm:text-8xl lg:text-9xl uppercase mx-0 lg:mx-4 cursor-pointer leading-none w-full lg:w-auto"
+                        class="order-2 lg:order-2 font-title-custom text-center text-6xl sm:text-8xl lg:text-9xl uppercase mx-0 lg:mx-4 cursor-pointer leading-none w-full lg:w-auto hover:text-gray-700 transition-colors"
                         onclick="window.location.hash=''"
                     >
                         JCJournal
                     </h1>
 
-                    <!-- Date Script -->
                     <script>
                         (function () {
                             const d = new Date();
@@ -151,10 +142,12 @@
                 <div class="border-b border-black"></div>
                 <div class="border-b border-red-500 my-1"></div>
                 <div class="border-b border-black mb-4"></div>
-                <p class="text-center text-sm mb-4 max-w-4xl mx-auto px-4">
-                    Most of important text writings and topical tanigble talking
-                    musings about with which the world is revolve. Truth is the
-                    most it important of all knowledge.
+                <p
+                    class="text-center text-sm mb-4 max-w-4xl mx-auto px-4 italic text-gray-700"
+                >
+                    Most important text writings and topical tangible talking
+                    musings about with which the world revolves. Truth is the
+                    most important of all knowledge.
                 </p>
                 <div class="border-b border-black"></div>
             </header>
@@ -175,12 +168,6 @@
         >
             <p class="text-xs text-gray-600 uppercase" id="footer-links">
                 © 2025 JCJournal. All Rights Reserved.
-                <span class="mx-2">|</span>
-                <a
-                    href="#login"
-                    class="hover:text-red-500 transition-colors font-bold"
-                    >Staff Login</a
-                >
             </p>
         </footer>
 
@@ -207,8 +194,7 @@
             } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
             // =================================================================
-            //  CONFIGURATION SECTION
-            //  Paste your Firebase keys inside this object.
+            //  CONFIGURATION
             // =================================================================
 
             const firebaseConfig = {
@@ -234,7 +220,6 @@
                 );
             } catch (e) {
                 console.error(e);
-                // No overlay, simply log error
             }
 
             let allArticles = [];
@@ -258,13 +243,12 @@
                 window.addEventListener("hashchange", handleRouting);
                 setTimeout(handleRouting, 100);
 
-                // Global Window Scroll for Infinite Loading (Standard behavior)
+                // Global Window Scroll for Infinite Loading
                 window.addEventListener("scroll", () => {
                     if (currentView !== "home") return;
                     const st = document.getElementById("scroll-trigger");
                     if (st) {
                         const rect = st.getBoundingClientRect();
-                        // If element is close to entering viewport
                         if (rect.top < window.innerHeight + 100) {
                             if (displayedCount < allArticles.length) {
                                 displayedCount += 5;
@@ -280,10 +264,11 @@
                 if (!footerLinks) return;
 
                 const user = currentUser || auth.currentUser;
+                const baseFooter = "© 2025 JCJournal. All Rights Reserved.";
 
                 if (user) {
                     footerLinks.innerHTML = `
-                    © 2025 JCJournal. All Rights Reserved.
+                    ${baseFooter}
                     <span class="mx-2">|</span>
                     <a href="#submit" class="hover:text-red-500 transition-colors font-bold">Submit Article</a>
                     <span class="mx-2">|</span>
@@ -291,7 +276,7 @@
                 `;
                 } else {
                     footerLinks.innerHTML = `
-                    © 2025 JCJournal. All Rights Reserved.
+                    ${baseFooter}
                     <span class="mx-2">|</span>
                     <a href="#login" class="hover:text-red-500 transition-colors font-bold">Staff Login</a>
                 `;
@@ -301,7 +286,6 @@
             function handleRouting() {
                 const hash = window.location.hash;
                 updateFooterState();
-                // Scroll top on navigation
                 window.scrollTo(0, 0);
 
                 if (hash === "" || hash === "#") {
@@ -349,7 +333,9 @@
                         });
 
                         if (allArticles.length === 0) {
-                            if (currentView === "home") renderHome();
+                            if (currentView === "home") {
+                                mainContent.innerHTML = `<div class="text-center py-10 text-xl font-bold">No articles yet.<br><span class="text-sm font-normal">Login to post the first one.</span></div>`;
+                            }
                             return;
                         }
 
@@ -376,8 +362,11 @@
                 );
             }
 
+            // --- FIXED FUNCTION HERE ---
             function formatArticleText(text) {
                 if (!text) return "<p>No content.</p>";
+
+                // Split text into lines to process line-by-line
                 const lines = text.split("\n");
                 let html = "";
                 let inList = false;
@@ -387,19 +376,26 @@
                     return str.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
                 };
 
-                if (listMatch) {
-                    if (!inList) {
-                        html += '<ul class="list-disc pl-5 mb-4">';
-                        inList = true;
+                // Loop through every line (This was missing in your code!)
+                lines.forEach((line) => {
+                    const listMatch = line.match(/^[\-\*]\s+(.*)/);
+
+                    if (listMatch) {
+                        if (!inList) {
+                            html += '<ul class="list-disc pl-5 mb-4">';
+                            inList = true;
+                        }
+                        html += `<li class="mb-1">${processFormatting(listMatch[1])}</li>`;
+                    } else {
+                        if (inList) {
+                            html += "</ul>";
+                            inList = false;
+                        }
+                        const formattedLine = processFormatting(line);
+                        html += `<div class="article-text-block">${formattedLine || "&nbsp;"}</div>`;
                     }
-                    html += `<li class="mb-1">${listMatch[2]}</li>`;
-                } else {
-                    if (inList) {
-                        html += "</ul>";
-                        inList = false;
-                    }
-                    html += `<div class="article-text-block">${line || "&nbsp;"}</div>`;
-                }
+                });
+
                 if (inList) html += "</ul>";
                 return html;
             }
@@ -439,16 +435,15 @@
 
                 let html = `<div class="fade-in space-y-10">`;
                 articlesToShow.forEach((article) => {
-                    // Grayscale removed
                     html += `
                 <article class="flex flex-col sm:flex-row items-start border-b border-gray-200 pb-10 last:border-0">
-                    <a href="#article/${article.id}" class="flex-shrink-0 w-full sm:w-48 cursor-pointer">
+                    <a href="#article/${article.id}" class="flex-shrink-0 w-full sm:w-48 cursor-pointer group">
                         <img src="${article.imageUrl || "https://placehold.co/192x128/cccccc/000000?text=No+Image&font=inter"}"
                              alt="Thumbnail"
-                             class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0 transition-all duration-300">
+                             class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0 transition-all duration-300 grayscale group-hover:grayscale-0">
                     </a>
                     <div class="sm:ml-6 w-full">
-                        <a href="#article/${article.id}"><h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors cursor-pointer hover:text-gray-600">${article.title || "Untitled Article"}</h2></a>
+                        <a href="#article/${article.id}"><h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors cursor-pointer hover:text-red-600">${article.title || "Untitled Article"}</h2></a>
                         <p class="text-base mb-3 text-gray-800">${article.summary || ""}</p>
                         <div class="flex items-center space-x-3">
                             <a href="#article/${article.id}" class="bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">Read More</a>
@@ -457,6 +452,7 @@
                     </div>
                 </article>`;
                 });
+
                 if (articlesToShow.length < filteredArticles.length) {
                     html += `<div id="scroll-trigger" class="text-center text-gray-500 py-8 font-bold">Scroll for more...</div>`;
                 }
@@ -467,14 +463,16 @@
             function renderArticleDetail(id) {
                 const article = allArticles.find((a) => a.id === id);
                 if (!article) {
-                    mainContent.innerHTML = `<div class="text-center mt-20">Loading article...</div>`;
+                    mainContent.innerHTML = `<div class="text-center mt-20 font-bold text-xl">Article not found (or loading...)</div>`;
                     return;
                 }
+
+                // This call used to crash your app
                 const formattedContent = formatArticleText(article.content);
 
                 let editBtn = "";
                 if (currentUser) {
-                    editBtn = `<a href="#edit/${article.id}" class="ml-4 text-sm font-bold uppercase text-blue-600 hover:underline">[EDIT ARTICLE]</a>`;
+                    editBtn = `<a href="#edit/${article.id}" class="ml-4 text-sm font-bold uppercase text-blue-600 hover:text-blue-800">[EDIT ARTICLE]</a>`;
                 }
 
                 mainContent.innerHTML = `
@@ -487,10 +485,10 @@
                     <div class="flex items-center space-x-2 text-sm text-gray-600 mb-8 border-b border-black pb-4">
                         <span class="font-bold text-black uppercase">By ${article.author}</span><span>•</span><span>${new Date(article.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <img src="${article.imageUrl || "https://placehold.co/800x400/cccccc/000000?text=No+Image"}" class="w-full h-auto max-h-[500px] object-cover mb-8 rounded">
+                    <img src="${article.imageUrl || "https://placehold.co/800x400/cccccc/000000?text=No+Image"}" class="w-full h-auto max-h-[500px] object-cover mb-8 rounded shadow-sm">
 
                     <div class="article-body font-inter text-gray-800 text-lg">
-                        <p class="font-bold text-xl mb-6 italic">${article.summary}</p>
+                        <p class="font-bold text-xl mb-6 italic border-l-4 border-red-500 pl-4">${article.summary}</p>
                         ${formattedContent}
                     </div>
                 </div>`;
@@ -524,6 +522,8 @@
                     .getElementById("login-form")
                     .addEventListener("submit", async (e) => {
                         e.preventDefault();
+                        const errBox = document.getElementById("login-error");
+                        errBox.textContent = "Logging in...";
                         try {
                             const cred = await signInWithEmailAndPassword(
                                 auth,
@@ -539,8 +539,7 @@
                             let msg = "Invalid email or password.";
                             if (error.code === "auth/invalid-credential")
                                 msg = "Incorrect email or password.";
-                            document.getElementById("login-error").textContent =
-                                msg;
+                            errBox.textContent = msg;
                         }
                     });
             }
@@ -549,10 +548,11 @@
                 let authorName = "";
                 if (currentUser && currentUser.email) {
                     const email = currentUser.email.toLowerCase();
-                    if (email === "jack@jcjournal.com")
-                        authorName = "Jack Pendry";
-                    else if (email === "connor@jcjournal.com")
+                    // Simple autofill logic
+                    if (email.includes("jack")) authorName = "Jack Pendry";
+                    else if (email.includes("connor"))
                         authorName = "Connor O'Donnell";
+                    else authorName = "Staff Writer";
                 }
 
                 let existingArticle = null;
@@ -578,25 +578,18 @@
                             <div><label class="block text-xs font-bold uppercase mb-1">Image URL</label><input type="text" id="imageUrl" placeholder="https://..." class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" value="${existingArticle ? existingArticle.imageUrl : ""}"><p class="text-[10px] text-gray-500 mt-1">Paste a link to an image (Imgur, etc)</p></div>
                         </div>
                         <div><label class="block text-xs font-bold uppercase mb-1">Short Summary</label><textarea id="summary" rows="2" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Appears on the homepage...">${existingArticle ? existingArticle.summary : ""}</textarea></div>
-                        <div><label class="block text-xs font-bold uppercase mb-1">Full Content</label><textarea id="content" rows="15" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Write here. Use - or * for automatic lists.">${existingArticle ? existingArticle.content : ""}</textarea><p class="text-[10px] text-gray-500 mt-1">Start a line with - or * to create a bullet list.</p></div>
-                        <div class="pt-4 flex justify-between items-center"><a href="#" class="text-sm font-bold uppercase hover:text-red-500">Cancel</a><button type="submit" class="bg-black text-white font-bold uppercase py-3 px-8 hover:bg-gray-800 transition-colors">${btnText}</button></div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Full Content</label><textarea id="content" rows="15" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Write here. Use - or * for automatic lists.">${existingArticle ? existingArticle.content : ""}</textarea><p class="text-[10px] text-gray-500 mt-1">Start a line with - or * to create a bullet list. Use **text** for bold.</p></div>
+
+                        <div class="pt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                            <a href="#" class="text-sm font-bold uppercase hover:text-red-500">Cancel</a>
+                            <button type="submit" class="w-full sm:w-auto bg-black text-white font-bold uppercase py-3 px-8 hover:bg-gray-800 transition-colors">${btnText}</button>
+                        </div>
+                        <p id="submit-msg" class="text-center font-bold text-sm mt-2"></p>
                     </form>
                 </div>`;
 
-                // SAFELY SET VALUES VIA JS TO AVOID HTML INJECTION ISSUES
-                if (existingArticle) {
-                    document.getElementById("title").value =
-                        existingArticle.title || "";
-                    document.getElementById("author").value =
-                        existingArticle.author || "";
-                    document.getElementById("imageUrl").value =
-                        existingArticle.imageUrl || "";
-                    document.getElementById("summary").value =
-                        existingArticle.summary || "";
-                    document.getElementById("content").value =
-                        existingArticle.content || "";
-                } else {
-                    // New Article - Set Autofill Author
+                // Handle autofill if creating new
+                if (!existingArticle) {
                     document.getElementById("author").value = authorName;
                 }
 
@@ -605,8 +598,14 @@
                     .addEventListener("submit", async (e) => {
                         e.preventDefault();
                         const btn = e.target.querySelector("button");
+                        const msgBox = document.getElementById("submit-msg");
+
                         btn.textContent = "Processing...";
                         btn.disabled = true;
+                        msgBox.className =
+                            "text-center font-bold text-sm mt-2 text-gray-500";
+                        msgBox.textContent = "";
+
                         try {
                             const data = {
                                 title: document.getElementById("title").value,
@@ -623,14 +622,24 @@
                             if (editId) {
                                 const docRef = doc(db, "articles", editId);
                                 await updateDoc(docRef, data);
-                                alert("Article Updated!");
-                                window.location.hash = `#article/${editId}`;
+                                msgBox.className =
+                                    "text-center font-bold text-sm mt-2 text-green-600";
+                                msgBox.textContent =
+                                    "Article updated successfully!";
+                                setTimeout(() => {
+                                    window.location.hash = `#article/${editId}`;
+                                }, 1000);
                             } else {
                                 data.createdAt = Date.now();
                                 data.submitterId = currentUser.uid;
                                 await addDoc(collection(db, "articles"), data);
-                                alert("Article Published!");
-                                window.location.hash = "";
+                                msgBox.className =
+                                    "text-center font-bold text-sm mt-2 text-green-600";
+                                msgBox.textContent =
+                                    "Article published successfully!";
+                                setTimeout(() => {
+                                    window.location.hash = "";
+                                }, 1000);
                             }
                         } catch (error) {
                             console.error("Error submitting:", error);
@@ -638,7 +647,11 @@
                             if (error.code === "permission-denied")
                                 msg =
                                     "Permission Denied. You may not be authorized to write.";
-                            alert(`Error: ${msg}`);
+
+                            msgBox.className =
+                                "text-center font-bold text-sm mt-2 text-red-500";
+                            msgBox.textContent = `Error: ${msg}`;
+
                             btn.textContent = btnText;
                             btn.disabled = false;
                         }
@@ -648,20 +661,6 @@
             searchInput.addEventListener("input", () => {
                 displayedCount = 5;
                 if (currentView === "home") renderHome();
-            });
-            // Removed custom scroll event listener because default body scroll is handled by browser
-            window.addEventListener("scroll", () => {
-                if (currentView !== "home") return;
-                const st = document.getElementById("scroll-trigger");
-                if (
-                    st &&
-                    st.getBoundingClientRect().top < window.innerHeight + 100
-                ) {
-                    if (displayedCount < allArticles.length) {
-                        displayedCount += 5;
-                        renderHome();
-                    }
-                }
             });
 
             init();
