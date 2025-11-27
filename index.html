@@ -270,15 +270,15 @@
                     footerLinks.innerHTML = `
                     ${baseFooter}
                     <span class="mx-2">|</span>
-                    <a href="#submit" class="hover:text-red-500 transition-colors font-bold">Submit Article</a>
+                    <a href="#submit" class="hover:text-gray-700 transition-colors font-bold">Submit Article</a>
                     <span class="mx-2">|</span>
-                    <a href="#logout" class="hover:text-red-500 transition-colors">Logout</a>
+                    <a href="#logout" class="hover:text-gray-700 transition-colors">Logout</a>
                 `;
                 } else {
                     footerLinks.innerHTML = `
                     ${baseFooter}
                     <span class="mx-2">|</span>
-                    <a href="#login" class="hover:text-red-500 transition-colors font-bold">Staff Login</a>
+                    <a href="#login" class="hover:text-gray-700 transition-colors font-bold">Staff Login</a>
                 `;
                 }
             }
@@ -438,10 +438,10 @@
                     <a href="#article/${article.id}" class="flex-shrink-0 w-full sm:w-48 cursor-pointer group">
                         <img src="${article.imageUrl || "https://placehold.co/192x128/cccccc/000000?text=No+Image&font=inter"}"
                              alt="Thumbnail"
-                             class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0 transition-all duration-300 grayscale group-hover:grayscale-0">
+                             class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0 transition-all duration-300">
                     </a>
                     <div class="sm:ml-6 w-full">
-                        <a href="#article/${article.id}"><h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors cursor-pointer hover:text-red-600">${article.title || "Untitled Article"}</h2></a>
+                        <a href="#article/${article.id}"><h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors cursor-pointer hover:text-gray-700">${article.title || "Untitled Article"}</h2></a>
                         <p class="text-base mb-3 text-gray-800">${article.summary || ""}</p>
                         <div class="flex items-center space-x-3">
                             <a href="#article/${article.id}" class="bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">Read More</a>
@@ -476,7 +476,7 @@
                 mainContent.innerHTML = `
                 <div class="fade-in pb-20 max-w-full">
                     <div class="flex items-center mb-6">
-                        <a href="#" class="inline-block text-sm font-bold uppercase border-b border-black hover:text-red-500">← Back to Home</a>
+                        <a href="#" class="inline-block text-sm font-bold uppercase border-b border-black hover:text-gray-700">← Back to Home</a>
                         ${editBtn}
                     </div>
                     <h1 class="text-4xl sm:text-6xl font-bold uppercase mb-4 font-title-custom leading-tight break-words">${article.title}</h1>
