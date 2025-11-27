@@ -81,6 +81,9 @@
             .article-body li {
                 margin-bottom: 0.25rem;
             }
+            .article-body strong {
+                font-weight: 700;
+            }
         </style>
     </head>
     <!-- Min-height screen ensures footer stays down, but no overflow-hidden -->
@@ -379,9 +382,10 @@
                 let html = "";
                 let inList = false;
 
-                lines.forEach((line) => {
-                    const trimmed = line.trim();
-                    const listMatch = trimmed.match(/^([\*\-•])\s?(.*)/);
+                const processFormatting = (str) => {
+                    // Replace **text** with <strong>text</strong>
+                    return str.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                };
 
                     if (listMatch) {
                         if (!inList) {
