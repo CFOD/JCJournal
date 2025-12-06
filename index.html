@@ -70,9 +70,11 @@
 
             .article-text-block {
                 white-space: pre-wrap;
-                margin-bottom: 0.5em;
+                /* FIXED: Removed margin to stop double-spacing. */
+                /* Use 'Enter' twice for a gap, just like the editor. */
+                margin-bottom: 0;
                 line-height: 1.6;
-                min-height: 1em;
+                min-height: 1.2em; /* Ensures empty lines take up space */
             }
 
             .article-body ul {
@@ -236,6 +238,9 @@
                     updateFooterState();
                     if (!dataListenerUnsubscribe) {
                         setupDataListener();
+                    } else {
+                        // Refresh home to show/hide drafts based on login status
+                        if (currentView === "home") renderHome();
                     }
                 });
 
@@ -361,7 +366,6 @@
                 );
             }
 
-            // --- FIXED FUNCTION HERE ---
             function formatArticleText(text) {
                 if (!text) return "<p>No content.</p>";
 
@@ -389,6 +393,7 @@
                             inList = false;
                         }
                         const formattedLine = processFormatting(line);
+                        // Empty lines now take up small height, forcing user to double-return for big gaps
                         html += `<div class="article-text-block">${formattedLine || "&nbsp;"}</div>`;
                     }
                 });
@@ -400,6 +405,9 @@
             function renderHome() {
                 const searchTerm = searchInput.value.toLowerCase();
                 const filteredArticles = allArticles.filter((a) => {
+                    // FILTER: If draft, hide unless logged in
+                    if (a.status === 'draft' && !currentUser) return false;
+
                     const dateStr = new Date(a.createdAt)
                         .toLocaleDateString()
                         .toLowerCase();
@@ -432,15 +440,23 @@
 
                 let html = `<div class="fade-in space-y-10">`;
                 articlesToShow.forEach((article) => {
+                    // UI: Show draft badge for staff
+                    let draftBadge = '';
+                    let opacityClass = '';
+                    if (article.status === 'draft') {
+                        draftBadge = `<span class="bg-red-100 text-red-600 text-xs px-2 py-1 rounded mr-2 font-bold uppercase tracking-wide border border-red-200">DRAFT</span>`;
+                        opacityClass = 'opacity-60';
+                    }
+
                     html += `
-                <article class="flex flex-col sm:flex-row items-start border-b border-gray-200 pb-10 last:border-0">
+                <article class="flex flex-col sm:flex-row items-start border-b border-gray-200 pb-10 last:border-0 ${opacityClass}">
                     <a href="#article/${article.id}" class="flex-shrink-0 w-full sm:w-48 cursor-pointer group">
                         <img src="${article.imageUrl || "https://placehold.co/192x128/cccccc/000000?text=No+Image&font=inter"}"
                              alt="Thumbnail"
                              class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0 transition-all duration-300">
                     </a>
                     <div class="sm:ml-6 w-full">
-                        <a href="#article/${article.id}"><h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors cursor-pointer hover:text-gray-700">${article.title || "Untitled Article"}</h2></a>
+                        <a href="#article/${article.id}"><h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors cursor-pointer hover:text-gray-700">${draftBadge}${article.title || "Untitled Article"}</h2></a>
                         <p class="text-base mb-3 text-gray-800">${article.summary || ""}</p>
                         <div class="flex items-center space-x-3">
                             <a href="#article/${article.id}" class="bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">Read More</a>
@@ -459,21 +475,33 @@
 
             function renderArticleDetail(id) {
                 const article = allArticles.find((a) => a.id === id);
+                
                 if (!article) {
                     mainContent.innerHTML = `<div class="text-center mt-20 font-bold text-xl">Article not found (or loading...)</div>`;
                     return;
                 }
+                
+                // Security Check: Hide drafts from public
+                if (article.status === 'draft' && !currentUser) {
+                     mainContent.innerHTML = `<div class="text-center mt-20 text-red-600 font-bold text-xl">Access Denied: This article is a draft.</div>`;
+                     return;
+                }
 
-                // This call used to crash your app
                 const formattedContent = formatArticleText(article.content);
 
                 let editBtn = "";
+                let draftBanner = "";
+
                 if (currentUser) {
                     editBtn = `<a href="#edit/${article.id}" class="ml-4 text-sm font-bold uppercase text-blue-600 hover:text-blue-800">[EDIT ARTICLE]</a>`;
+                    if (article.status === 'draft') {
+                        draftBanner = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6 text-center font-bold">DRAFT MODE - Hidden from public</div>`;
+                    }
                 }
 
                 mainContent.innerHTML = `
                 <div class="fade-in pb-20 max-w-full">
+                    ${draftBanner}
                     <div class="flex items-center mb-6">
                         <a href="#" class="inline-block text-sm font-bold uppercase border-b border-black hover:text-gray-700">← Back to Home</a>
                         ${editBtn}
@@ -564,6 +592,12 @@
                         authorName = existingArticle.author || authorName;
                     }
                 }
+                
+                // Determine Draft Status
+                // Default to 'published' for new articles, or use existing status
+                const currentStatus = existingArticle ? (existingArticle.status || 'published') : 'published';
+                const selPublished = currentStatus === 'published' ? 'selected' : '';
+                const selDraft = currentStatus === 'draft' ? 'selected' : '';
 
                 mainContent.innerHTML = `
                 <div class="fade-in max-w-2xl mx-auto bg-white p-8 border-2 border-black mb-20">
@@ -574,6 +608,16 @@
                             <div><label class="block text-xs font-bold uppercase mb-1">Author Name</label><input type="text" id="author" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Your Name" value="${authorName}"></div>
                             <div><label class="block text-xs font-bold uppercase mb-1">Image URL</label><input type="text" id="imageUrl" placeholder="https://..." class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" value="${existingArticle ? existingArticle.imageUrl : ""}"><p class="text-[10px] text-gray-500 mt-1">Paste a link to an image (Imgur, etc)</p></div>
                         </div>
+                        
+                        <!-- STATUS DROPDOWN -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase mb-1">Status</label>
+                            <select id="status" class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 bg-white font-mono text-sm">
+                                <option value="published" ${selPublished}>Published (Visible to Everyone)</option>
+                                <option value="draft" ${selDraft}>Draft (Hidden, Staff Only)</option>
+                            </select>
+                        </div>
+
                         <div><label class="block text-xs font-bold uppercase mb-1">Short Summary</label><textarea id="summary" rows="2" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Appears on the homepage...">${existingArticle ? existingArticle.summary : ""}</textarea></div>
                         <div><label class="block text-xs font-bold uppercase mb-1">Full Content</label><textarea id="content" rows="15" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Write here. Use - or * for automatic lists.">${existingArticle ? existingArticle.content : ""}</textarea><p class="text-[10px] text-gray-500 mt-1">Start a line with - or * to create a bullet list. Use **text** for bold.</p></div>
 
@@ -624,6 +668,7 @@
                                     document.getElementById("summary").value,
                                 content:
                                     document.getElementById("content").value,
+                                status: document.getElementById("status").value,
                                 isGrayscale: false,
                             };
 
