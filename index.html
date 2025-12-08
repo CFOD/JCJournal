@@ -70,11 +70,9 @@
 
             .article-text-block {
                 white-space: pre-wrap;
-                /* FIXED: Removed margin to stop double-spacing. */
-                /* Use 'Enter' twice for a gap, just like the editor. */
                 margin-bottom: 0;
                 line-height: 1.6;
-                min-height: 1.2em; /* Ensures empty lines take up space */
+                min-height: 1.2em; 
             }
 
             .article-body ul {
@@ -188,6 +186,7 @@
                 collection,
                 addDoc,
                 updateDoc,
+                deleteDoc, 
                 onSnapshot,
                 doc,
                 getDoc,
@@ -212,6 +211,7 @@
             let app, auth, db;
 
             try {
+                // Warning removed. If keys are missing, console will log errors.
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
@@ -220,7 +220,7 @@
                     console.error("Persistence Error:", e),
                 );
             } catch (e) {
-                console.error(e);
+                console.error("Firebase Init Error:", e);
             }
 
             let allArticles = [];
@@ -393,7 +393,6 @@
                             inList = false;
                         }
                         const formattedLine = processFormatting(line);
-                        // Empty lines now take up small height, forcing user to double-return for big gaps
                         html += `<div class="article-text-block">${formattedLine || "&nbsp;"}</div>`;
                     }
                 });
@@ -573,7 +572,6 @@
                 let authorName = "";
                 if (currentUser && currentUser.email) {
                     const email = currentUser.email.toLowerCase();
-                    // Simple autofill logic
                     if (email.includes("jack")) authorName = "Jack Pendry";
                     else if (email.includes("connor"))
                         authorName = "Connor O'Donnell";
@@ -583,6 +581,7 @@
                 let existingArticle = null;
                 let formTitle = "Submit New Article";
                 let btnText = "Publish";
+                let deleteButton = "";
 
                 if (editId) {
                     existingArticle = allArticles.find((a) => a.id === editId);
@@ -590,66 +589,116 @@
                         formTitle = "Edit Article";
                         btnText = "Update Article";
                         authorName = existingArticle.author || authorName;
+                        deleteButton = `<button type="button" id="delete-btn" class="w-full sm:w-auto border-2 border-red-500 text-red-500 font-bold uppercase py-3 px-8 hover:bg-red-50 transition-colors">Delete Article</button>`;
                     }
                 }
                 
-                // Determine Draft Status
-                // Default to 'published' for new articles, or use existing status
                 const currentStatus = existingArticle ? (existingArticle.status || 'published') : 'published';
                 const selPublished = currentStatus === 'published' ? 'selected' : '';
                 const selDraft = currentStatus === 'draft' ? 'selected' : '';
+                
+                // AUTOSAVE LOGIC
+                const storageKey = editId ? `jc_draft_${editId}` : `jc_draft_new`;
+                const savedDraft = JSON.parse(localStorage.getItem(storageKey) || 'null');
+                let restoredMsg = "";
+
+                let titleVal = existingArticle ? existingArticle.title : "";
+                let authorVal = existingArticle ? existingArticle.author : authorName;
+                let imgVal = existingArticle ? existingArticle.imageUrl : "";
+                let summaryVal = existingArticle ? existingArticle.summary : "";
+                let contentVal = existingArticle ? existingArticle.content : "";
+                let statusVal = currentStatus;
+
+                if (savedDraft) {
+                    titleVal = savedDraft.title;
+                    authorVal = savedDraft.author;
+                    imgVal = savedDraft.imageUrl;
+                    summaryVal = savedDraft.summary;
+                    contentVal = savedDraft.content;
+                    statusVal = savedDraft.status;
+                    restoredMsg = `<div class="bg-blue-100 text-blue-700 text-xs font-bold p-2 mb-4 rounded text-center">Unsaved draft restored.</div>`;
+                }
 
                 mainContent.innerHTML = `
                 <div class="fade-in max-w-2xl mx-auto bg-white p-8 border-2 border-black mb-20">
                     <h2 class="text-3xl font-bold uppercase mb-6 text-center font-title-custom">${formTitle}</h2>
+                    ${restoredMsg}
                     <form id="article-form" class="space-y-4">
-                        <div><label class="block text-xs font-bold uppercase mb-1">Article Title</label><input type="text" id="title" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm placeholder-gray-400" placeholder="e.g. THE STATE OF THE WORLD" value="${existingArticle ? existingArticle.title : ""}"></div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Article Title</label><input type="text" id="title" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm placeholder-gray-400" placeholder="e.g. THE STATE OF THE WORLD" value="${titleVal}"></div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div><label class="block text-xs font-bold uppercase mb-1">Author Name</label><input type="text" id="author" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Your Name" value="${authorName}"></div>
-                            <div><label class="block text-xs font-bold uppercase mb-1">Image URL</label><input type="text" id="imageUrl" placeholder="https://..." class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" value="${existingArticle ? existingArticle.imageUrl : ""}"><p class="text-[10px] text-gray-500 mt-1">Paste a link to an image (Imgur, etc)</p></div>
+                            <div><label class="block text-xs font-bold uppercase mb-1">Author Name</label><input type="text" id="author" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Your Name" value="${authorVal}"></div>
+                            <div><label class="block text-xs font-bold uppercase mb-1">Image URL</label><input type="text" id="imageUrl" placeholder="https://..." class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" value="${imgVal}"><p class="text-[10px] text-gray-500 mt-1">Paste a link to an image (Imgur, etc)</p></div>
                         </div>
                         
-                        <!-- STATUS DROPDOWN -->
                         <div>
                             <label class="block text-xs font-bold uppercase mb-1">Status</label>
                             <select id="status" class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 bg-white font-mono text-sm">
-                                <option value="published" ${selPublished}>Published (Visible to Everyone)</option>
-                                <option value="draft" ${selDraft}>Draft (Hidden, Staff Only)</option>
+                                <option value="published" ${statusVal === 'published' ? 'selected' : ''}>Published (Visible to Everyone)</option>
+                                <option value="draft" ${statusVal === 'draft' ? 'selected' : ''}>Draft (Hidden, Staff Only)</option>
                             </select>
                         </div>
 
-                        <div><label class="block text-xs font-bold uppercase mb-1">Short Summary</label><textarea id="summary" rows="2" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Appears on the homepage...">${existingArticle ? existingArticle.summary : ""}</textarea></div>
-                        <div><label class="block text-xs font-bold uppercase mb-1">Full Content</label><textarea id="content" rows="15" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Write here. Use - or * for automatic lists.">${existingArticle ? existingArticle.content : ""}</textarea><p class="text-[10px] text-gray-500 mt-1">Start a line with - or * to create a bullet list. Use **text** for bold.</p></div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Short Summary</label><textarea id="summary" rows="2" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Appears on the homepage...">${summaryVal}</textarea></div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Full Content</label><textarea id="content" rows="15" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Write here. Use - or * for automatic lists. Use **bold** for bold text.">${contentVal}</textarea><p class="text-[10px] text-gray-500 mt-1">Start a line with - or * to create a bullet list. Use **text** for bold.</p></div>
 
                         <div class="pt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                            <a href="#" class="text-sm font-bold uppercase hover:text-red-500">Cancel</a>
-                            <button type="submit" class="w-full sm:w-auto bg-black text-white font-bold uppercase py-3 px-8 hover:bg-gray-800 transition-colors">${btnText}</button>
+                            <div class="flex flex-col sm:flex-row gap-4 items-center">
+                                <a href="#" class="text-sm font-bold uppercase hover:text-red-500">Cancel</a>
+                                <span id="autosave-status" class="text-xs text-gray-400 italic"></span>
+                            </div>
+                            <div class="flex gap-4 items-center">
+                                ${deleteButton}
+                                <button type="submit" class="w-full sm:w-auto bg-black text-white font-bold uppercase py-3 px-8 hover:bg-gray-800 transition-colors">${btnText}</button>
+                            </div>
                         </div>
                         <p id="submit-msg" class="text-center font-bold text-sm mt-2"></p>
                     </form>
                 </div>`;
+                
+                // AUTOSAVE LISTENER
+                const form = document.getElementById('article-form');
+                const inputs = form.querySelectorAll('input, textarea, select');
+                const statusLabel = document.getElementById('autosave-status');
+                
+                inputs.forEach(input => {
+                    input.addEventListener('input', () => {
+                        const draftData = {
+                            title: document.getElementById("title").value,
+                            author: document.getElementById("author").value,
+                            imageUrl: document.getElementById("imageUrl").value,
+                            summary: document.getElementById("summary").value,
+                            content: document.getElementById("content").value,
+                            status: document.getElementById("status").value,
+                        };
+                        localStorage.setItem(storageKey, JSON.stringify(draftData));
+                        
+                        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        statusLabel.textContent = `Autosaved at ${time}`;
+                    });
+                });
 
-                // Handle autofill if creating new
-                if (existingArticle) {
-                    document.getElementById("title").value =
-                        existingArticle.title || "";
-                    document.getElementById("author").value =
-                        existingArticle.author || "";
-                    document.getElementById("imageUrl").value =
-                        existingArticle.imageUrl || "";
-                    document.getElementById("summary").value =
-                        existingArticle.summary || "";
-                    document.getElementById("content").value =
-                        existingArticle.content || "";
-                } else {
-                    document.getElementById("author").value = authorName;
+                // Delete Button Listener
+                if (editId) {
+                    document.getElementById("delete-btn").addEventListener("click", async () => {
+                        if (confirm("Are you sure you want to delete this article? This cannot be undone.")) {
+                            try {
+                                await deleteDoc(doc(db, "articles", editId));
+                                localStorage.removeItem(storageKey); 
+                                alert("Article Deleted Successfully.");
+                                window.location.hash = "";
+                            } catch (error) {
+                                console.error("Error deleting document: ", error);
+                                alert("Error deleting article: " + error.message);
+                            }
+                        }
+                    });
                 }
 
                 document
                     .getElementById("article-form")
                     .addEventListener("submit", async (e) => {
                         e.preventDefault();
-                        const btn = e.target.querySelector("button");
+                        const btn = e.target.querySelector("button[type='submit']");
                         const msgBox = document.getElementById("submit-msg");
 
                         btn.textContent = "Processing...";
@@ -675,6 +724,7 @@
                             if (editId) {
                                 const docRef = doc(db, "articles", editId);
                                 await updateDoc(docRef, data);
+                                localStorage.removeItem(storageKey); 
                                 msgBox.className =
                                     "text-center font-bold text-sm mt-2 text-green-600";
                                 msgBox.textContent =
@@ -686,6 +736,7 @@
                                 data.createdAt = Date.now();
                                 data.submitterId = currentUser.uid;
                                 await addDoc(collection(db, "articles"), data);
+                                localStorage.removeItem(storageKey); 
                                 msgBox.className =
                                     "text-center font-bold text-sm mt-2 text-green-600";
                                 msgBox.textContent =
