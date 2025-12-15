@@ -251,19 +251,22 @@
                 setTimeout(handleRouting, 100);
 
                 // Global Window Scroll for Infinite Loading
-                window.addEventListener("scroll", () => {
-                    if (currentView !== "home") return;
-                    const st = document.getElementById("scroll-trigger");
-                    if (st) {
-                        const rect = st.getBoundingClientRect();
-                        if (rect.top < window.innerHeight + 100) {
-                            if (displayedCount < allArticles.length) {
-                                displayedCount += 5;
-                                renderHome();
-                            }
+                window.addEventListener("scroll", checkScroll);
+            }
+
+            function checkScroll() {
+                if (currentView !== "home") return;
+                const st = document.getElementById("scroll-trigger");
+                if (st) {
+                    const rect = st.getBoundingClientRect();
+                    // Load more if trigger is near viewport or if page is short
+                    if (rect.top < window.innerHeight + 200) {
+                        if (displayedCount < allArticles.length) {
+                            displayedCount += 5;
+                            renderHome();
                         }
                     }
-                });
+                }
             }
 
             function updateFooterState() {
@@ -297,6 +300,8 @@
 
                 if (hash === "" || hash === "#") {
                     currentView = "home";
+                    // Reset displayedCount to 5 when navigating to home so lazy load works again
+                    displayedCount = 5;
                     if (allArticles.length > 0) renderHome();
                 } else if (hash === "#login") {
                     currentView = "login";
@@ -516,6 +521,9 @@
                 }
                 html += `</div>`;
                 mainContent.innerHTML = html;
+                
+                // Try to load more immediately if screen is tall
+                setTimeout(checkScroll, 100);
             }
 
             function renderArticleDetail(id) {
@@ -675,7 +683,7 @@
                         <div><label class="block text-xs font-bold uppercase mb-1">Article Title</label><input type="text" id="title" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm placeholder-gray-400" placeholder="e.g. THE STATE OF THE WORLD" value="${existingArticle ? existingArticle.title : ""}"></div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div><label class="block text-xs font-bold uppercase mb-1">Author Name</label><input type="text" id="author" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Your Name" value="${authorName}"></div>
-                            <div><label class="block text-xs font-bold uppercase mb-1">Image URL</label><input type="text" id="imageUrl" placeholder="https://..." class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" value="${existingArticle ? existingArticle.imageUrl : ""}"><p class="text-[10px] text-gray-500 mt-1">Paste a link to an image (Imgur, etc)</p></div>
+                            <div><label class="block text-xs font-bold uppercase mb-1">Image URL</label><input type="text" id="imageUrl" placeholder="https://..." class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" value="${existingArticle ? existingArticle.imageUrl : ""}"><p class="text-[10px] text-gray-500 mt-1">Paste a link to an image (Imgur, etc)</p></div>
                         </div>
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -693,7 +701,7 @@
                             </div>
                         </div>
 
-                        <div><label class="block text-xs font-bold uppercase mb-1">Short Summary</label><textarea id="summary" rows="2" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Appears on the homepage...">${existingArticle ? existingArticle.summary : ""}</textarea></div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Short Summary</label><textarea id="summary" rows="2" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Appears on the homepage...">${existingArticle ? existingArticle.summary : ""}</textarea></div>
                         <div><label class="block text-xs font-bold uppercase mb-1">Full Content</label><textarea id="content" rows="15" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Write here. Use - or * for automatic lists. Use **bold** for bold text.">${existingArticle ? existingArticle.content : ""}</textarea><p class="text-[10px] text-gray-500 mt-1">Start a line with - or * to create a bullet list. Use **text** for bold.</p></div>
 
                         <div class="pt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -850,21 +858,8 @@
                 if (currentView === "home") renderHome();
             });
 
-            window.addEventListener("scroll", () => {
-                if (currentView !== "home") return;
-                const st = document.getElementById("scroll-trigger");
-                if (st) {
-                    const rect = st.getBoundingClientRect();
-                    if (rect.top < window.innerHeight + 100) {
-                        if (displayedCount < allArticles.length) {
-                            displayedCount += 5;
-                            renderHome();
-                        }
-                    }
-                }
-            });
-
             init();
         </script>
+
     </body>
 </html>
