@@ -292,10 +292,13 @@
 
                 const user = currentUser || auth.currentUser;
                 const baseFooter = "© 2025 JCJournal. All Rights Reserved.";
+                const contactLink = `<a href="mailto:contact@jcjournal.com" class="hover:text-gray-700 transition-colors">Contact</a>`;
 
                 if (user) {
                     footerLinks.innerHTML = `
                     ${baseFooter}
+                    <span class="mx-2">|</span>
+                    ${contactLink}
                     <span class="mx-2">|</span>
                     <a href="#submit" class="hover:text-gray-700 transition-colors font-bold">Submit Article</a>
                     <span class="mx-2">|</span>
@@ -304,6 +307,8 @@
                 } else {
                     footerLinks.innerHTML = `
                     ${baseFooter}
+                    <span class="mx-2">|</span>
+                    ${contactLink}
                     <span class="mx-2">|</span>
                     <a href="#login" class="hover:text-gray-700 transition-colors font-bold">Staff Login</a>
                 `;
