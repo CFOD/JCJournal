@@ -5,6 +5,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>JCJournal</title>
         <link rel="icon" type="image/x-icon" href="icon.ico" />
+        
+        <!-- 1. Load External Config (If available) -->
+        <script src="config.js"></script>
+
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -111,6 +115,7 @@
         </style>
     </head>
     <body class="bg-[#FFFDF3] font-inter text-black flex flex-col min-h-screen">
+        
         <div class="container mx-auto p-4 sm:p-8 max-w-6xl flex-grow">
             <header class="mb-8">
                 <div
@@ -123,7 +128,7 @@
                         <!-- Date Box -->
                         <div
                             class="order-1 border-2 border-black p-2 sm:p-4 text-center font-bold text-xs w-32 sm:w-44 uppercase cursor-pointer flex items-center justify-center hover:bg-black hover:text-white transition-colors"
-                            onclick="window.location.hash=''"
+                            onclick="resetHome()"
                         >
                             <span id="current-date"></span>
                         </div>
@@ -140,7 +145,7 @@
                     <!-- Title -->
                     <h1
                         class="order-2 lg:order-2 font-title-custom text-center text-6xl sm:text-8xl lg:text-9xl uppercase mx-0 lg:mx-4 cursor-pointer leading-none w-full lg:w-auto hover:text-gray-700 transition-colors"
-                        onclick="window.location.hash=''"
+                        onclick="resetHome()"
                     >
                         JCJournal
                     </h1>
@@ -216,31 +221,44 @@
             } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
             // =================================================================
-            //  CONFIGURATION
+            //  CONFIGURATION LOGIC
             // =================================================================
 
-            const firebaseConfig = {
-                apiKey: "AIzaSyBjyAYAyQI4rGQviWbH1Dx8o2hFoe7jAS4",
-                authDomain: "jc-journal.firebaseapp.com",
-                projectId: "jc-journal",
-                storageBucket: "jc-journal.firebasestorage.app",
-                messagingSenderId: "931803753012",
-                appId: "1:931803753012:web:fce867abf6794c180ff861",
-            };
+            // 1. Check for config.js (window.siteConfig)
+            // 2. Check for Chat Environment (__firebase_config)
+            // 3. Fallback to a placeholder
+            
+            let firebaseConfig;
+            
+            if (window.siteConfig) {
+                // Best case: User has config.js
+                firebaseConfig = window.siteConfig;
+            } else if (typeof __firebase_config !== 'undefined') {
+                // Fallback: Chat environment
+                try {
+                    firebaseConfig = JSON.parse(__firebase_config);
+                } catch(e) {}
+            } else {
+                // Fail case
+                firebaseConfig = { apiKey: "MISSING" };
+            }
 
             // =================================================================
 
             let app, auth, db;
 
             try {
-                // Config Warning Removed
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
+                if (firebaseConfig.apiKey === "MISSING") {
+                    console.warn("Configuration Missing: Create config.js or paste keys.");
+                } else {
+                    app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
 
-                setPersistence(auth, browserLocalPersistence).catch((e) =>
-                    console.error("Persistence Error:", e),
-                );
+                    setPersistence(auth, browserLocalPersistence).catch((e) =>
+                        console.error("Persistence Error:", e),
+                    );
+                }
             } catch (e) {
                 console.error("Firebase Init Error:", e);
             }
@@ -265,8 +283,8 @@
                     window.scrollTo(0,0);
                 }
             };
-			
-			// Global Helper to Reset Home (Clear search and go to home)
+            
+            // Global Helper to Reset Home (Clear search and go to home)
             window.resetHome = function() {
                 const searchInput = document.getElementById('search-input');
                 if (searchInput) {
@@ -278,6 +296,13 @@
             };
 
             async function init() {
+                if (!auth) {
+                    // Fail gracefully if auth not initialized
+                    const msg = document.getElementById('status-msg');
+                    if (msg) msg.innerText = "Error: App not initialized (Check Config)";
+                    return;
+                }
+
                 onAuthStateChanged(auth, (user) => {
                     currentUser = user;
                     updateFooterState();
@@ -378,7 +403,20 @@
             }
 
             function setupDataListener() {
-                const articlesRef = collection(db, "articles");
+                // Dynamic collection selection for chat environment vs production
+                // In chat env, we use a specific path. In production, we use 'articles'.
+                // Since we want this file to work in production with config.js, we prioritize 'articles'
+                // unless we detect we are in the chat environment via __app_id
+                
+                let articlesRef;
+                if (window.siteConfig) {
+                    articlesRef = collection(db, "articles");
+                } else if (typeof __app_id !== 'undefined') {
+                    // Chat environment fallback
+                     articlesRef = collection(db, 'artifacts', __app_id, 'public', 'data', 'articles');
+                } else {
+                    articlesRef = collection(db, "articles");
+                }
 
                 dataListenerUnsubscribe = onSnapshot(
                     articlesRef,
@@ -503,7 +541,7 @@
                     // Check visibility logic first
                     if (!isArticleVisible(a)) return false;
 
-                    // Use scheduled date for display/search if available
+                    // Use effective date for search/display
                     const effectiveDate = (a.status === 'scheduled' && a.scheduledAt) ? a.scheduledAt : a.createdAt;
                     const dateStr = new Date(effectiveDate)
                         .toLocaleDateString()
@@ -561,11 +599,12 @@
                         }
                     }
 
-                    // Series Tag Logic
+                    // Series Tag Logic (With Part #)
                     let seriesHtml = '';
                     if (article.series) {
-                        // Pass series name to global setSearch function
-                        seriesHtml = `<div onclick="setSearch('${article.series.replace(/'/g, "\\'")}')" class="text-xs font-bold text-red-600 uppercase mb-1 cursor-pointer hover:underline tracking-wider">${article.series}</div>`;
+                        const partText = article.seriesPart ? ` // PART ${article.seriesPart}` : '';
+                        const displayText = article.series + partText;
+                        seriesHtml = `<div onclick="setSearch('${article.series.replace(/'/g, "\\'")}')" class="text-xs font-bold text-red-600 uppercase mb-1 cursor-pointer hover:underline tracking-wider">${displayText}</div>`;
                     }
 
                     html += `
@@ -633,10 +672,11 @@
                     }
                 }
                 
-                // Series Banner in Article Detail
+                // Series Banner in Article Detail (With Part #)
                 let seriesBanner = '';
                 if (article.series) {
-                    seriesBanner = `<div class="mb-6 text-center"><span class="inline-block bg-black text-white text-xs font-bold px-3 py-1 uppercase tracking-widest cursor-pointer hover:bg-red-600 transition-colors" onclick="setSearch('${article.series.replace(/'/g, "\\'")}')">Series: ${article.series}</span></div>`;
+                    const partText = article.seriesPart ? ` • PART ${article.seriesPart}` : '';
+                    seriesBanner = `<div class="mb-6 text-center"><span class="inline-block bg-black text-white text-xs font-bold px-3 py-1 uppercase tracking-widest cursor-pointer hover:bg-red-600 transition-colors" onclick="setSearch('${article.series.replace(/'/g, "\\'")}')">SERIES: ${article.series}${partText}</span></div>`;
                 }
 
                 mainContent.innerHTML = `
@@ -759,20 +799,26 @@
                 mainContent.innerHTML = `
                 <div class="fade-in max-w-2xl mx-auto bg-white p-8 border-2 border-black mb-20">
                     <h2 class="text-3xl font-bold uppercase mb-6 text-center font-title-custom">${formTitle}</h2>
+                    ${editId ? '' : '<div class="bg-blue-100 text-blue-700 text-xs font-bold p-2 mb-4 rounded text-center hidden" id="restore-msg">Unsaved draft restored.</div>'}
                     <form id="article-form" class="space-y-4">
-                        <div><label class="block text-xs font-bold uppercase mb-1">Article Title</label><input type="text" id="title" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 placeholder-gray-400" placeholder="e.g. THE STATE OF THE WORLD" value="${existingArticle ? existingArticle.title : ""}"></div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Article Title</label><input type="text" id="title" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm placeholder-gray-400" placeholder="e.g. THE STATE OF THE WORLD" value="${existingArticle ? existingArticle.title : ""}"></div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div><label class="block text-xs font-bold uppercase mb-1">Author Name</label><input type="text" id="author" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Your Name" value="${authorName}"></div>
                             <div><label class="block text-xs font-bold uppercase mb-1">Image URL</label><input type="text" id="imageUrl" placeholder="https://..." class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" value="${existingArticle ? existingArticle.imageUrl : ""}"><p class="text-[10px] text-gray-500 mt-1">Paste a link to an image (Imgur, etc)</p></div>
                         </div>
                         
-                        <!-- SERIES INPUT -->
-                        <div>
-                            <label class="block text-xs font-bold uppercase mb-1">Series Name (Optional)</label>
-                            <input type="text" id="series" class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="e.g. The Balkan Trip" value="${existingArticle ? existingArticle.series || '' : ''}">
-                            <p class="text-[10px] text-gray-500 mt-1">Groups articles together.</p>
+                        <!-- SERIES ROW -->
+                        <div class="grid grid-cols-4 gap-4">
+                            <div class="col-span-3">
+                                <label class="block text-xs font-bold uppercase mb-1">Series Name (Optional)</label>
+                                <input type="text" id="series" class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="e.g. The Balkan Trip" value="${existingArticle ? existingArticle.series || '' : ''}">
+                            </div>
+                            <div class="col-span-1">
+                                <label class="block text-xs font-bold uppercase mb-1">Part #</label>
+                                <input type="text" id="seriesPart" class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="#" value="${existingArticle ? existingArticle.seriesPart || '' : ''}">
+                            </div>
                         </div>
-                        
+
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold uppercase mb-1">Status</label>
@@ -829,6 +875,7 @@
                             content: document.getElementById("content").value,
                             status: document.getElementById("status").value,
                             series: document.getElementById("series").value,
+                            seriesPart: document.getElementById("seriesPart").value,
                         };
                         localStorage.setItem(storageKey, JSON.stringify(draftData));
                         
@@ -842,7 +889,8 @@
                     document.getElementById("summary").value = savedDraft.summary || "";
                     document.getElementById("content").value = savedDraft.content || "";
                     document.getElementById("series").value = savedDraft.series || "";
-                    statusLabel.textContent = "Restored from draft";
+                    document.getElementById("seriesPart").value = savedDraft.seriesPart || "";
+                    document.getElementById("restore-msg").classList.remove("hidden");
                 }
 
                 if (editId) {
@@ -897,10 +945,20 @@
                                 content:
                                     document.getElementById("content").value,
                                 series: document.getElementById("series").value,
+                                seriesPart: document.getElementById("seriesPart").value,
                                 status: status,
                                 scheduledAt: scheduledTimestamp,
                                 isGrayscale: false,
                             };
+                            
+                            // FIX: If switching to published, and we had a schedule, bake it in.
+                            if (status === 'published' && editId) {
+                                const oldArt = allArticles.find(a => a.id === editId);
+                                if (oldArt && oldArt.scheduledAt) {
+                                    data.createdAt = oldArt.scheduledAt;
+                                    data.scheduledAt = null;
+                                }
+                            }
 
                             if (editId) {
                                 const docRef = doc(db, "articles", editId);
@@ -914,7 +972,10 @@
                                     window.location.hash = `#article/${editId}`;
                                 }, 1000);
                             } else {
-                                data.createdAt = Date.now();
+                                // Only set createdAt if we didn't already set it above (via schedule bake-in)
+                                if (!data.createdAt) {
+                                    data.createdAt = Date.now();
+                                }
                                 data.submitterId = currentUser.uid;
                                 await addDoc(collection(db, "articles"), data);
                                 localStorage.removeItem(storageKey); 
