@@ -168,8 +168,7 @@
                 <p
                     class="text-center text-sm mb-4 max-w-4xl mx-auto px-4 italic text-gray-700"
                 >
-                    A digital record of thoughts, theories, and written words.<br>
-					Every Monday & Thursday at 7pm.
+                    A digital record of thoughts, theories, and written words.
                 </p>
                 <div class="border-b border-black"></div>
             </header>
@@ -255,6 +254,18 @@
             const mainContent = document.getElementById("main-content");
             const searchInput = document.getElementById("search-input");
 
+            // Global Helper for Series Search
+            window.setSearch = function(term) {
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.value = term;
+                    // Trigger the search logic manually
+                    searchInput.dispatchEvent(new Event('input'));
+                    window.location.hash = ''; // Ensure we are on home view
+                    window.scrollTo(0,0);
+                }
+            };
+
             async function init() {
                 onAuthStateChanged(auth, (user) => {
                     currentUser = user;
@@ -322,6 +333,8 @@
 
                 if (hash === "" || hash === "#") {
                     currentView = "home";
+                    // Reset displayed count on home nav so lazy load works again
+                    displayedCount = 5;
                     if (allArticles.length > 0) renderHome();
                 } else if (hash === "#login") {
                     currentView = "login";
@@ -494,6 +507,8 @@
                             a.author.toLowerCase().includes(searchTerm)) ||
                         (a.content &&
                             a.content.toLowerCase().includes(searchTerm)) ||
+                        (a.series &&
+                            a.series.toLowerCase().includes(searchTerm)) || // Added Series to search
                         dateStr.includes(searchTerm)
                     );
                 });
@@ -530,11 +545,16 @@
                                 const dateStr = new Date(scheduled).toLocaleString();
                                 badge = `<span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded mr-2 font-bold uppercase tracking-wide border border-yellow-200" title="Live at ${dateStr}">SCHEDULED</span>`;
                                 opacityClass = 'opacity-80';
-                            } else {
-                                // Past (Technically live, but still marked 'scheduled' in DB)
-                                badge = `<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded mr-2 font-bold uppercase tracking-wide border border-green-200">LIVE (AUTO)</span>`;
                             }
+                            // If time has passed, NO BADGE. Just looks like normal live article.
                         }
+                    }
+
+                    // Series Tag Logic
+                    let seriesHtml = '';
+                    if (article.series) {
+                        // Pass series name to global setSearch function
+                        seriesHtml = `<div onclick="setSearch('${article.series.replace(/'/g, "\\'")}')" class="text-xs font-bold text-red-600 uppercase mb-1 cursor-pointer hover:underline tracking-wider">${article.series}</div>`;
                     }
 
                     html += `
@@ -546,6 +566,7 @@
                              class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0 transition-all duration-300">
                     </a>
                     <div class="sm:ml-6 w-full">
+                        ${seriesHtml}
                         <a href="#article/${article.id}"><h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors cursor-pointer hover:text-gray-700">${badge}${article.title || "Untitled Article"}</h2></a>
                         <p class="text-base mb-3 text-gray-800">${article.summary || ""}</p>
                         <div class="flex items-center space-x-3">
@@ -600,6 +621,12 @@
                         }
                     }
                 }
+                
+                // Series Banner in Article Detail
+                let seriesBanner = '';
+                if (article.series) {
+                    seriesBanner = `<div class="mb-6 text-center"><span class="inline-block bg-black text-white text-xs font-bold px-3 py-1 uppercase tracking-widest cursor-pointer hover:bg-red-600 transition-colors" onclick="setSearch('${article.series.replace(/'/g, "\\'")}')">Series: ${article.series}</span></div>`;
+                }
 
                 mainContent.innerHTML = `
                 <div class="fade-in pb-20 max-w-full">
@@ -608,6 +635,9 @@
                         <a href="#" class="inline-block text-sm font-bold uppercase border-b border-black hover:text-gray-700">← Back to Home</a>
                         ${editBtn}
                     </div>
+                    
+                    ${seriesBanner}
+
                     <h1 class="text-4xl sm:text-6xl font-bold uppercase mb-4 font-title-custom leading-tight break-words">${article.title}</h1>
                     <div class="flex items-center space-x-2 text-sm text-gray-600 mb-8 border-b border-black pb-4">
                         <span class="font-bold text-black uppercase">By ${article.author}</span><span>•</span><span>${new Date(displayDate).toLocaleDateString()}</span>
@@ -719,10 +749,17 @@
                 <div class="fade-in max-w-2xl mx-auto bg-white p-8 border-2 border-black mb-20">
                     <h2 class="text-3xl font-bold uppercase mb-6 text-center font-title-custom">${formTitle}</h2>
                     <form id="article-form" class="space-y-4">
-                        <div><label class="block text-xs font-bold uppercase mb-1">Article Title</label><input type="text" id="title" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm placeholder-gray-400" placeholder="e.g. THE STATE OF THE WORLD" value="${existingArticle ? existingArticle.title : ""}"></div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Article Title</label><input type="text" id="title" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 placeholder-gray-400" placeholder="e.g. THE STATE OF THE WORLD" value="${existingArticle ? existingArticle.title : ""}"></div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div><label class="block text-xs font-bold uppercase mb-1">Author Name</label><input type="text" id="author" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Your Name" value="${authorName}"></div>
                             <div><label class="block text-xs font-bold uppercase mb-1">Image URL</label><input type="text" id="imageUrl" placeholder="https://..." class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" value="${existingArticle ? existingArticle.imageUrl : ""}"><p class="text-[10px] text-gray-500 mt-1">Paste a link to an image (Imgur, etc)</p></div>
+                        </div>
+                        
+                        <!-- SERIES INPUT -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase mb-1">Series Name (Optional)</label>
+                            <input type="text" id="series" class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="e.g. The Balkan Trip" value="${existingArticle ? existingArticle.series || '' : ''}">
+                            <p class="text-[10px] text-gray-500 mt-1">Groups articles together.</p>
                         </div>
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -780,6 +817,7 @@
                             summary: document.getElementById("summary").value,
                             content: document.getElementById("content").value,
                             status: document.getElementById("status").value,
+                            series: document.getElementById("series").value,
                         };
                         localStorage.setItem(storageKey, JSON.stringify(draftData));
                         
@@ -792,6 +830,7 @@
                     document.getElementById("title").value = savedDraft.title || "";
                     document.getElementById("summary").value = savedDraft.summary || "";
                     document.getElementById("content").value = savedDraft.content || "";
+                    document.getElementById("series").value = savedDraft.series || "";
                     statusLabel.textContent = "Restored from draft";
                 }
 
@@ -846,6 +885,7 @@
                                     document.getElementById("summary").value,
                                 content:
                                     document.getElementById("content").value,
+                                series: document.getElementById("series").value,
                                 status: status,
                                 scheduledAt: scheduledTimestamp,
                                 isGrayscale: false,
