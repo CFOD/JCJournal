@@ -87,6 +87,25 @@
                 font-weight: 700;
             }
             
+            /* Inline Image Styles */
+            .article-inline-figure {
+                margin: 2rem 0;
+                width: 100%;
+            }
+            .article-inline-image {
+                width: 100%;
+                height: auto;
+                border-radius: 0.5rem;
+                display: block;
+            }
+            .article-inline-caption {
+                text-align: center;
+                font-size: 0.875rem;
+                color: #6b7280;
+                margin-top: 0.5rem;
+                font-style: italic;
+            }
+            
             /* Utility */
             .hidden { display: none; }
         </style>
@@ -149,7 +168,8 @@
                 <p
                     class="text-center text-sm mb-4 max-w-4xl mx-auto px-4 italic text-gray-700"
                 >
-                    A digital record of thoughts, theories, and written words.
+                    A digital record of thoughts, theories, and written words.<br>
+					Every Monday & Thursday at 7pm.
                 </p>
                 <div class="border-b border-black"></div>
             </header>
@@ -251,22 +271,19 @@
                 setTimeout(handleRouting, 100);
 
                 // Global Window Scroll for Infinite Loading
-                window.addEventListener("scroll", checkScroll);
-            }
-
-            function checkScroll() {
-                if (currentView !== "home") return;
-                const st = document.getElementById("scroll-trigger");
-                if (st) {
-                    const rect = st.getBoundingClientRect();
-                    // Load more if trigger is near viewport or if page is short
-                    if (rect.top < window.innerHeight + 200) {
-                        if (displayedCount < allArticles.length) {
-                            displayedCount += 5;
-                            renderHome();
+                window.addEventListener("scroll", () => {
+                    if (currentView !== "home") return;
+                    const st = document.getElementById("scroll-trigger");
+                    if (st) {
+                        const rect = st.getBoundingClientRect();
+                        if (rect.top < window.innerHeight + 100) {
+                            if (displayedCount < allArticles.length) {
+                                displayedCount += 5;
+                                renderHome();
+                            }
                         }
                     }
-                }
+                });
             }
 
             function updateFooterState() {
@@ -300,8 +317,6 @@
 
                 if (hash === "" || hash === "#") {
                     currentView = "home";
-                    // Reset displayedCount to 5 when navigating to home so lazy load works again
-                    displayedCount = 5;
                     if (allArticles.length > 0) renderHome();
                 } else if (hash === "#login") {
                     currentView = "login";
@@ -392,8 +407,27 @@
                 };
 
                 lines.forEach((line) => {
-                    const listMatch = line.match(/^[\-\*]\s+(.*)/);
+                    const trimmed = line.trim();
+                    
+                    // 1. Check for IMAGE: syntax
+                    const imgMatch = trimmed.match(/^IMAGE:\s*(https?:\/\/\S+)(?:\s*\|\s*(.*))?$/i);
+                    if (imgMatch) {
+                        if (inList) { html += "</ul>"; inList = false; }
+                        
+                        const url = imgMatch[1];
+                        const caption = imgMatch[2] || '';
+                        
+                        html += `
+                        <figure class="article-inline-figure">
+                            <img src="${url}" referrerpolicy="no-referrer" class="article-inline-image" alt="${caption}">
+                            ${caption ? `<figcaption class="article-inline-caption">${caption}</figcaption>` : ''}
+                        </figure>
+                        `;
+                        return; // Skip rest of loop for this line
+                    }
 
+                    // 2. Check for List items
+                    const listMatch = line.match(/^[\-\*]\s+(.*)/);
                     if (listMatch) {
                         if (!inList) {
                             html += '<ul class="list-disc pl-5 mb-4">';
@@ -503,6 +537,7 @@
                     <a href="#article/${article.id}" class="flex-shrink-0 w-full sm:w-48 cursor-pointer group">
                         <img src="${article.imageUrl || "https://placehold.co/192x128/cccccc/000000?text=No+Image&font=inter"}"
                              alt="Thumbnail"
+                             referrerpolicy="no-referrer"
                              class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0 transition-all duration-300">
                     </a>
                     <div class="sm:ml-6 w-full">
@@ -521,9 +556,6 @@
                 }
                 html += `</div>`;
                 mainContent.innerHTML = html;
-                
-                // Try to load more immediately if screen is tall
-                setTimeout(checkScroll, 100);
             }
 
             function renderArticleDetail(id) {
@@ -575,7 +607,9 @@
                     <div class="flex items-center space-x-2 text-sm text-gray-600 mb-8 border-b border-black pb-4">
                         <span class="font-bold text-black uppercase">By ${article.author}</span><span>•</span><span>${new Date(displayDate).toLocaleDateString()}</span>
                     </div>
-                    <img src="${article.imageUrl || "https://placehold.co/800x400/cccccc/000000?text=No+Image"}" class="w-full h-auto max-h-[500px] object-cover mb-8 rounded shadow-sm">
+                    <img src="${article.imageUrl || "https://placehold.co/800x400/cccccc/000000?text=No+Image"}" 
+                         referrerpolicy="no-referrer"
+                         class="w-full h-auto max-h-[500px] object-cover mb-8 rounded shadow-sm">
 
                     <div class="article-body font-inter text-gray-800 text-lg">
                         <p class="font-bold text-xl mb-6 italic border-l-4 border-red-500 pl-4">${article.summary}</p>
@@ -702,7 +736,7 @@
                         </div>
 
                         <div><label class="block text-xs font-bold uppercase mb-1">Short Summary</label><textarea id="summary" rows="2" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Appears on the homepage...">${existingArticle ? existingArticle.summary : ""}</textarea></div>
-                        <div><label class="block text-xs font-bold uppercase mb-1">Full Content</label><textarea id="content" rows="15" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Write here. Use - or * for automatic lists. Use **bold** for bold text.">${existingArticle ? existingArticle.content : ""}</textarea><p class="text-[10px] text-gray-500 mt-1">Start a line with - or * to create a bullet list. Use **text** for bold.</p></div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Full Content</label><textarea id="content" rows="15" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Write here. Use - or * for automatic lists. Use **bold** for bold text. Use IMAGE: URL for inline images.">${existingArticle ? existingArticle.content : ""}</textarea><p class="text-[10px] text-gray-500 mt-1">Start a line with - or * to create a bullet list. Use **text** for bold. Start a line with IMAGE: https://... | Caption to insert an image.</p></div>
 
                         <div class="pt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
                             <div class="flex flex-col sm:flex-row gap-4 items-center">
@@ -858,8 +892,21 @@
                 if (currentView === "home") renderHome();
             });
 
+            window.addEventListener("scroll", () => {
+                if (currentView !== "home") return;
+                const st = document.getElementById("scroll-trigger");
+                if (st) {
+                    const rect = st.getBoundingClientRect();
+                    if (rect.top < window.innerHeight + 100) {
+                        if (displayedCount < allArticles.length) {
+                            displayedCount += 5;
+                            renderHome();
+                        }
+                    }
+                }
+            });
+
             init();
         </script>
-
     </body>
 </html>
