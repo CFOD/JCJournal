@@ -265,6 +265,17 @@
                     window.scrollTo(0,0);
                 }
             };
+			
+			// Global Helper to Reset Home (Clear search and go to home)
+            window.resetHome = function() {
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.value = '';
+                    // Trigger input to update list immediately via listener
+                    searchInput.dispatchEvent(new Event('input'));
+                }
+                window.location.hash = '';
+            };
 
             async function init() {
                 onAuthStateChanged(auth, (user) => {
