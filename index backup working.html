@@ -95,7 +95,6 @@
             .article-inline-figure {
                 margin: 2rem 0;
                 width: 100%;
-                position: relative; /* Needed for absolute positioning of copyright */
             }
             .article-inline-image {
                 width: 100%;
@@ -110,49 +109,13 @@
                 margin-top: 0.5rem;
                 font-style: italic;
             }
-            .article-image-copyright {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                background-color: rgba(0, 0, 0, 0.6);
-                color: white;
-                padding: 4px 8px;
-                font-size: 10px;
-                border-bottom-left-radius: 0.5rem; 
-                border-top-right-radius: 0.25rem;
-                pointer-events: none;
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-            }
             
             /* Utility */
             .hidden { display: none; }
-            
-            /* Config Error Overlay */
-            #config-error-overlay {
-                display: none;
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(255,255,255,0.95); z-index: 9999;
-                flex-direction: column; justify-content: center; align-items: center;
-                text-align: center; padding: 20px;
-            }
         </style>
     </head>
     <body class="bg-[#FFFDF3] font-inter text-black flex flex-col min-h-screen">
         
-        <!-- Config Error Overlay -->
-        <div id="config-error-overlay">
-            <h1 class="text-4xl font-bold text-red-600 mb-4">CONFIGURATION MISSING</h1>
-            <p class="text-xl mb-4">The website cannot find your <code>config.js</code> file.</p>
-            <div class="bg-gray-100 p-4 rounded border border-gray-400 text-left font-mono text-sm mb-6">
-                1. Ensure you have created a file named <strong>config.js</strong>.<br>
-                2. Ensure it is in the same folder as this HTML file.<br>
-                3. Ensure it contains your Firebase Keys (window.siteConfig = ...).<br>
-                4. Refresh the page.
-            </div>
-            <button onclick="location.reload()" class="bg-black text-white px-6 py-2 font-bold uppercase hover:bg-gray-800">I Fixed It, Refresh</button>
-        </div>
-
         <div class="container mx-auto p-4 sm:p-8 max-w-6xl flex-grow">
             <header class="mb-8">
                 <div
@@ -210,8 +173,7 @@
                 <p
                     class="text-center text-sm mb-4 max-w-4xl mx-auto px-4 italic text-gray-700"
                 >
-                    A digital record of thoughts, theories, and written words.<br>
-                    Mondays and Thursdays at 7pm UTC
+                    A weekly record of thoughts, theories, and written words.
                 </p>
                 <div class="border-b border-black"></div>
             </header>
@@ -255,18 +217,21 @@
                 onSnapshot,
                 doc,
                 getDoc,
-                getDocs, 
                 setDoc,
             } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
             // =================================================================
             //  CONFIGURATION LOGIC
             // =================================================================
+
+            // 1. Check for config.js (window.siteConfig)
+            // 2. Check for Chat Environment (__firebase_config)
+            // 3. Fallback to a placeholder
             
             let firebaseConfig;
             
             if (window.siteConfig) {
-                // User has config.js
+                // Best case: User has config.js
                 firebaseConfig = window.siteConfig;
             } else if (typeof __firebase_config !== 'undefined') {
                 // Fallback: Chat environment
@@ -438,6 +403,11 @@
             }
 
             function setupDataListener() {
+                // Dynamic collection selection for chat environment vs production
+                // In chat env, we use a specific path. In production, we use 'articles'.
+                // Since we want this file to work in production with config.js, we prioritize 'articles'
+                // unless we detect we are in the chat environment via __app_id
+                
                 let articlesRef;
                 if (window.siteConfig) {
                     articlesRef = collection(db, "articles");
@@ -491,24 +461,6 @@
                 );
             }
 
-            // AUTO-SUMMARY GENERATOR
-            function getSnippet(text, maxLength = 200) {
-                if (!text) return "No preview available.";
-                
-                // 1. Remove IMAGE: lines
-                let clean = text.replace(/^IMAGE:.*$/gm, "");
-                
-                // 2. Remove formatting symbols (**, -, *)
-                clean = clean.replace(/\*\*/g, "");
-                clean = clean.replace(/^[\-\*•]\s+/gm, "");
-                
-                // 3. Collapse whitespace (newlines to spaces)
-                clean = clean.replace(/\s+/g, " ").trim();
-                
-                if (clean.length <= maxLength) return clean;
-                return clean.substring(0, maxLength).trim() + "...";
-            }
-
             function formatArticleText(text) {
                 if (!text) return "<p>No content.</p>";
 
@@ -525,33 +477,16 @@
                     const trimmed = line.trim();
                     
                     // 1. Check for IMAGE: syntax
-                    const imgMatch = trimmed.match(/^IMAGE:\s*(https?:\/\/\S+)(.*)?$/i);
-                    
+                    const imgMatch = trimmed.match(/^IMAGE:\s*(https?:\/\/\S+)(?:\s*\|\s*(.*))?$/i);
                     if (imgMatch) {
                         if (inList) { html += "</ul>"; inList = false; }
                         
                         const url = imgMatch[1];
-                        const rest = imgMatch[2] || '';
-                        const parts = rest.split('|');
-                        
-                        let caption = '';
-                        let copyright = '';
-                        
-                        if (parts.length > 1) {
-                            caption = parts[1].trim();
-                        }
-                        if (parts.length > 2) {
-                            copyright = parts[2].trim();
-                        }
+                        const caption = imgMatch[2] || '';
                         
                         html += `
                         <figure class="article-inline-figure">
-                            <img src="${url}" 
-                                 referrerpolicy="no-referrer" 
-                                 class="article-inline-image" 
-                                 alt="${caption}"
-                                 onerror="this.onerror=null; this.src='https://placehold.co/800x400/cccccc/000000?text=Image+Unavailable';">
-                            ${copyright ? `<div class="article-image-copyright">${copyright}</div>` : ''}
+                            <img src="${url}" referrerpolicy="no-referrer" class="article-inline-image" alt="${caption}">
                             ${caption ? `<figcaption class="article-inline-caption">${caption}</figcaption>` : ''}
                         </figure>
                         `;
@@ -582,14 +517,21 @@
 
             // === CORE LOGIC: Determines if article is visible ===
             function isArticleVisible(article) {
+                // If you are staff, you see everything
                 if (currentUser) return true;
+                
+                // If draft, hidden
                 if (article.status === 'draft') return false;
 
+                // If scheduled, check time
                 if (article.status === 'scheduled') {
                     const scheduledTime = article.scheduledAt || 0;
                     const now = Date.now();
+                    // Visible ONLY if time has passed
                     return now >= scheduledTime;
                 }
+
+                // Otherwise public (published)
                 return true;
             }
 
@@ -598,10 +540,8 @@
                 const filteredArticles = allArticles.filter((a) => {
                     // Check visibility logic first
                     if (!isArticleVisible(a)) return false;
-                    
-                    // Check Author Filter (If active)
-                    if (currentAuthorFilter && a.author !== currentAuthorFilter) return false;
 
+                    // Use effective date for search/display
                     const effectiveDate = (a.status === 'scheduled' && a.scheduledAt) ? a.scheduledAt : a.createdAt;
                     const dateStr = new Date(effectiveDate)
                         .toLocaleDateString()
@@ -610,13 +550,14 @@
                     return (
                         (a.title &&
                             a.title.toLowerCase().includes(searchTerm)) ||
-                        // Search the content now since we auto-generate summary
-                        (a.content &&
-                            a.content.toLowerCase().includes(searchTerm)) ||
+                        (a.summary &&
+                            a.summary.toLowerCase().includes(searchTerm)) ||
                         (a.author &&
                             a.author.toLowerCase().includes(searchTerm)) ||
+                        (a.content &&
+                            a.content.toLowerCase().includes(searchTerm)) ||
                         (a.series &&
-                            a.series.toLowerCase().includes(searchTerm)) || 
+                            a.series.toLowerCase().includes(searchTerm)) || // Added Series to search
                         dateStr.includes(searchTerm)
                     );
                 });
@@ -625,36 +566,22 @@
                     0,
                     displayedCount,
                 );
-                
-                // Show Author Header if Filtering
-                let headerHtml = "";
-                if (currentAuthorFilter) {
-                    headerHtml = `
-                        <div class="mb-8 pb-4 border-b border-gray-300 flex justify-between items-center">
-                            <span class="text-xl font-bold uppercase">ARTICLES BY: <span class="text-red-600">${currentAuthorFilter}</span></span>
-                            <a href="#" class="text-xs uppercase bg-black text-white px-3 py-1 hover:bg-gray-800 transition-colors">Clear Filter</a>
-                        </div>
-                    `;
-                }
 
                 if (articlesToShow.length === 0) {
                     if (allArticles.length === 0) {
                         mainContent.innerHTML = `<div class="text-center py-10 text-xl font-bold">No articles yet.<br><span class="text-sm font-normal">Login to post the first one.</span></div>`;
                     } else {
-                        mainContent.innerHTML = `${headerHtml}<div class="text-center py-10 text-xl font-bold">No articles found.</div>`;
+                        mainContent.innerHTML = `<div class="text-center py-10 text-xl font-bold">No articles found.</div>`;
                     }
                     return;
                 }
 
                 let html = `<div class="fade-in space-y-10">`;
-                
-                // Add header if filtering
-                html = headerHtml + html;
-                
                 articlesToShow.forEach((article) => {
                     let badge = '';
                     let opacityClass = '';
                     
+                    // STAFF VIEW BADGES
                     if (currentUser) {
                         if (article.status === 'draft') {
                             badge = `<span class="bg-red-100 text-red-600 text-xs px-2 py-1 rounded mr-2 font-bold uppercase tracking-wide border border-red-200">DRAFT</span>`;
@@ -663,13 +590,16 @@
                             const now = Date.now();
                             const scheduled = article.scheduledAt || 0;
                             if (now < scheduled) {
+                                // Future
                                 const dateStr = new Date(scheduled).toLocaleString();
                                 badge = `<span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded mr-2 font-bold uppercase tracking-wide border border-yellow-200" title="Live at ${dateStr}">SCHEDULED</span>`;
                                 opacityClass = 'opacity-80';
                             }
+                            // If time has passed, NO BADGE. Just looks like normal live article.
                         }
                     }
 
+                    // Series Tag Logic (With Part #)
                     let seriesHtml = '';
                     if (article.series) {
                         const partText = article.seriesPart ? ` // PART ${article.seriesPart}` : '';
@@ -677,22 +607,18 @@
                         seriesHtml = `<div onclick="setSearch('${article.series.replace(/'/g, "\\'")}')" class="text-xs font-bold text-red-600 uppercase mb-1 cursor-pointer hover:underline tracking-wider">${displayText}</div>`;
                     }
 
-                    // AUTOMATIC SUMMARY GENERATION
-                    const autoSummary = getSnippet(article.content);
-
                     html += `
                 <article class="flex flex-col sm:flex-row items-start border-b border-gray-200 pb-10 last:border-0 ${opacityClass}">
                     <a href="#article/${article.id}" class="flex-shrink-0 w-full sm:w-48 cursor-pointer group">
                         <img src="${article.imageUrl || "https://placehold.co/192x128/cccccc/000000?text=No+Image&font=inter"}"
                              alt="Thumbnail"
                              referrerpolicy="no-referrer"
-                             onerror="this.onerror=null; this.src='https://placehold.co/192x128/cccccc/000000?text=Image+Unavailable';"
                              class="w-full h-48 sm:h-32 object-cover rounded mb-4 sm:mb-0 transition-all duration-300">
                     </a>
                     <div class="sm:ml-6 w-full">
                         ${seriesHtml}
                         <a href="#article/${article.id}"><h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors cursor-pointer hover:text-gray-700">${badge}${article.title || "Untitled Article"}</h2></a>
-                        <p class="text-base mb-3 text-gray-800">${autoSummary}</p>
+                        <p class="text-base mb-3 text-gray-800">${article.summary || ""}</p>
                         <div class="flex items-center space-x-3">
                             <a href="#article/${article.id}" class="bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">Read More</a>
                             <span class="text-sm text-gray-600">by ${article.author || "Unknown"}</span>
@@ -716,6 +642,7 @@
                     return;
                 }
                 
+                // Security Check
                 if (!isArticleVisible(article)) {
                      mainContent.innerHTML = `<div class="text-center mt-20 text-red-600 font-bold text-xl">Access Denied: This article is not yet available.</div>`;
                      return;
@@ -725,6 +652,7 @@
 
                 let editBtn = "";
                 let draftBanner = "";
+                // Display date logic: Use scheduled date if available
                 let displayDate = article.createdAt;
                 if (article.status === 'scheduled' && article.scheduledAt) {
                     displayDate = article.scheduledAt;
@@ -744,15 +672,12 @@
                     }
                 }
                 
+                // Series Banner in Article Detail (With Part #)
                 let seriesBanner = '';
                 if (article.series) {
                     const partText = article.seriesPart ? ` • PART ${article.seriesPart}` : '';
                     seriesBanner = `<div class="mb-6 text-center"><span class="inline-block bg-black text-white text-xs font-bold px-3 py-1 uppercase tracking-widest cursor-pointer hover:bg-red-600 transition-colors" onclick="setSearch('${article.series.replace(/'/g, "\\'")}')">SERIES: ${article.series}${partText}</span></div>`;
                 }
-
-                // NEW: Clickable Author
-                const authorName = article.author || "Unknown";
-                const authorLink = `<a href="#author/${encodeURIComponent(authorName)}" class="hover:text-red-600 hover:underline transition-colors border-b border-transparent hover:border-red-600">${authorName}</a>`;
 
                 mainContent.innerHTML = `
                 <div class="fade-in pb-20 max-w-full">
@@ -766,51 +691,18 @@
 
                     <h1 class="text-4xl sm:text-6xl font-bold uppercase mb-4 font-title-custom leading-tight break-words">${article.title}</h1>
                     <div class="flex items-center space-x-2 text-sm text-gray-600 mb-8 border-b border-black pb-4">
-                        <span class="font-bold text-black uppercase">By ${authorLink}</span><span>•</span><span>${new Date(displayDate).toLocaleDateString()}</span>
+                        <span class="font-bold text-black uppercase">By ${article.author}</span><span>•</span><span>${new Date(displayDate).toLocaleDateString()}</span>
                     </div>
                     <img src="${article.imageUrl || "https://placehold.co/800x400/cccccc/000000?text=No+Image"}" 
                          referrerpolicy="no-referrer"
                          class="w-full h-auto max-h-[500px] object-cover mb-8 rounded shadow-sm">
 
                     <div class="article-body font-inter text-gray-800 text-lg">
+                        <p class="font-bold text-xl mb-6 italic border-l-4 border-red-500 pl-4">${article.summary}</p>
                         ${formattedContent}
                     </div>
                 </div>`;
             }
-
-            // --- BACKUP FUNCTIONALITY ---
-            window.downloadBackup = async function() {
-                try {
-                    // Show a simple alert or toast
-                    alert("Generating backup... this may take a moment.");
-                    
-                    const articlesRef = collection(db, "articles");
-                    const snapshot = await getDocs(articlesRef);
-                    
-                    const data = [];
-                    snapshot.forEach((doc) => {
-                        data.push({ id: doc.id, ...doc.data() });
-                    });
-                    
-                    // Convert to JSON
-                    const json = JSON.stringify(data, null, 2);
-                    const blob = new Blob([json], { type: "application/json" });
-                    const url = URL.createObjectURL(blob);
-                    
-                    // Create temporary link and click it
-                    const a = document.createElement('a');
-                    a.href = url;
-                    const dateStr = new Date().toISOString().slice(0, 10);
-                    a.download = `jcjournal_backup_${dateStr}.json`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    
-                } catch (error) {
-                    console.error("Backup failed:", error);
-                    alert("Backup failed. Check console.");
-                }
-            };
 
             function renderLoginForm() {
                 if (currentUser && !currentUser.isAnonymous) {
@@ -820,7 +712,6 @@
                         <p class="mb-6">Welcome, ${currentUser.email}</p>
                         <a href="#submit" class="block w-full bg-black text-white font-bold uppercase py-3 px-8 hover:bg-gray-800 transition-colors mb-4">Submit Article</a>
                         <a href="#" class="block w-full border-2 border-black text-black font-bold uppercase py-3 px-8 hover:bg-gray-100 transition-colors">Go Home</a>
-                        <button onclick="downloadBackup()" class="block w-full mt-4 border-2 border-gray-400 text-gray-600 font-bold uppercase py-3 px-8 hover:bg-gray-100 transition-colors">Download Database Backup</button>
                         <button onclick="window.location.hash='#logout'" class="block w-full mt-4 border-2 border-red-500 text-red-500 font-bold uppercase py-3 px-8 hover:bg-red-50 transition-colors">Log Out</button>
                     </div>
                 `;
@@ -913,7 +804,7 @@
                         <div><label class="block text-xs font-bold uppercase mb-1">Article Title</label><input type="text" id="title" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm placeholder-gray-400" placeholder="e.g. THE STATE OF THE WORLD" value="${existingArticle ? existingArticle.title : ""}"></div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div><label class="block text-xs font-bold uppercase mb-1">Author Name</label><input type="text" id="author" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Your Name" value="${authorName}"></div>
-                            <div><label class="block text-xs font-bold uppercase mb-1">Image URL</label><input type="text" id="imageUrl" placeholder="https://..." class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" value="${existingArticle ? existingArticle.imageUrl : ""}"><p class="text-[10px] text-gray-500 mt-1">Paste a link to an image (Imgur, etc)</p></div>
+                            <div><label class="block text-xs font-bold uppercase mb-1">Image URL</label><input type="text" id="imageUrl" placeholder="https://..." class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" value="${existingArticle ? existingArticle.imageUrl : ""}"><p class="text-[10px] text-gray-500 mt-1">Paste a link to an image (Imgur, etc)</p></div>
                         </div>
                         
                         <!-- SERIES ROW -->
@@ -943,8 +834,8 @@
                             </div>
                         </div>
 
-                        <!-- Manual summary removed. Auto-generated. -->
-                        <div><label class="block text-xs font-bold uppercase mb-1">Full Content</label><textarea id="content" rows="15" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Write here. Use - or * for automatic lists. Use **bold** for bold text. Use IMAGE: URL | Caption | Copyright for images.">${existingArticle ? existingArticle.content : ""}</textarea><p class="text-[10px] text-gray-500 mt-1">Start a line with - or * to create a bullet list. Use **text** for bold. Start a line with IMAGE: https://... | Caption | Copyright to insert an image.</p></div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Short Summary</label><textarea id="summary" rows="2" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Appears on the homepage...">${existingArticle ? existingArticle.summary : ""}</textarea></div>
+                        <div><label class="block text-xs font-bold uppercase mb-1">Full Content</label><textarea id="content" rows="15" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Write here. Use - or * for automatic lists. Use **bold** for bold text. Use IMAGE: URL for inline images.">${existingArticle ? existingArticle.content : ""}</textarea><p class="text-[10px] text-gray-500 mt-1">Start a line with - or * to create a bullet list. Use **text** for bold. Start a line with IMAGE: https://... | Caption to insert an image.</p></div>
 
                         <div class="pt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
                             <div class="flex flex-col sm:flex-row gap-4 items-center">
@@ -980,6 +871,7 @@
                     input.addEventListener('input', () => {
                         const draftData = {
                             title: document.getElementById("title").value,
+                            summary: document.getElementById("summary").value,
                             content: document.getElementById("content").value,
                             status: document.getElementById("status").value,
                             series: document.getElementById("series").value,
@@ -994,6 +886,7 @@
                 
                 if (savedDraft && !existingArticle) {
                     document.getElementById("title").value = savedDraft.title || "";
+                    document.getElementById("summary").value = savedDraft.summary || "";
                     document.getElementById("content").value = savedDraft.content || "";
                     document.getElementById("series").value = savedDraft.series || "";
                     document.getElementById("seriesPart").value = savedDraft.seriesPart || "";
@@ -1047,7 +940,8 @@
                                 author: document.getElementById("author").value,
                                 imageUrl:
                                     document.getElementById("imageUrl").value,
-                                summary: "", // Empty as now auto-generated
+                                summary:
+                                    document.getElementById("summary").value,
                                 content:
                                     document.getElementById("content").value,
                                 series: document.getElementById("series").value,
@@ -1057,6 +951,7 @@
                                 isGrayscale: false,
                             };
                             
+                            // FIX: If switching to published, and we had a schedule, bake it in.
                             if (status === 'published' && editId) {
                                 const oldArt = allArticles.find(a => a.id === editId);
                                 if (oldArt && oldArt.scheduledAt) {
@@ -1077,6 +972,7 @@
                                     window.location.hash = `#article/${editId}`;
                                 }, 1000);
                             } else {
+                                // Only set createdAt if we didn't already set it above (via schedule bake-in)
                                 if (!data.createdAt) {
                                     data.createdAt = Date.now();
                                 }
