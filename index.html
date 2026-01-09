@@ -6,7 +6,7 @@
         <title>JCJournal</title>
         <link rel="icon" type="image/x-icon" href="icon.ico" />
         
-        <!-- 1. Load External Config -->
+        <!-- 1. Load External Config (If available) -->
         <script src="config.js"></script>
 
         <script src="https://cdn.tailwindcss.com"></script>
@@ -62,6 +62,15 @@
                 100% {
                     transform: rotate(360deg);
                 }
+            }
+
+            /* Config Error Overlay */
+            #config-error-overlay {
+                display: none;
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(255,255,255,0.95); z-index: 9999;
+                flex-direction: column; justify-content: center; align-items: center;
+                text-align: center; padding: 20px;
             }
 
             /* Article Formatting */
@@ -131,6 +140,19 @@
     </head>
     <body class="bg-[#FFFDF3] font-inter text-black flex flex-col min-h-screen">
         
+        <!-- Config Error Overlay -->
+        <div id="config-error-overlay">
+            <h1 class="text-4xl font-bold text-red-600 mb-4">CONFIGURATION MISSING</h1>
+            <p class="text-xl mb-4">The website cannot find your <code>config.js</code> file.</p>
+            <div class="bg-gray-100 p-4 rounded border border-gray-400 text-left font-mono text-sm mb-6">
+                1. Ensure you have created a file named <strong>config.js</strong>.<br>
+                2. Ensure it is in the same folder as this HTML file.<br>
+                3. Ensure it contains your Firebase Keys (window.siteConfig = ...).<br>
+                4. Refresh the page.
+            </div>
+            <button onclick="location.reload()" class="bg-black text-white px-6 py-2 font-bold uppercase hover:bg-gray-800">I Fixed It, Refresh</button>
+        </div>
+
         <div class="container mx-auto p-4 sm:p-8 max-w-6xl flex-grow">
             <header class="mb-8">
                 <div
@@ -188,7 +210,8 @@
                 <p
                     class="text-center text-sm mb-4 max-w-4xl mx-auto px-4 italic text-gray-700"
                 >
-                    A weekly record of thoughts, theories, and written words.<br>
+                    A digital record of thoughts, theories, and written words.<br>
+                    Mondays and Thursdays at 7pm UTC
                 </p>
                 <div class="border-b border-black"></div>
             </header>
@@ -242,24 +265,27 @@
             
             let firebaseConfig;
             
-            // STRICT PRIORITY: config.js first. NO MANUAL PASTE FALLBACK IN CODE.
             if (window.siteConfig) {
+                // User has config.js
                 firebaseConfig = window.siteConfig;
             } else if (typeof __firebase_config !== 'undefined') {
-                // Fallback: Chat environment (for testing)
+                // Fallback: Chat environment
                 try {
                     firebaseConfig = JSON.parse(__firebase_config);
                 } catch(e) {}
+            } else {
+                // Fail case
+                firebaseConfig = { apiKey: "MISSING" };
             }
-            
+
             // =================================================================
 
             let app, auth, db;
 
             try {
-                if (!firebaseConfig) {
-                    console.error("CRITICAL: No Configuration Found. Ensure config.js exists.");
-                    document.getElementById('status-msg').innerHTML = "<span class='text-red-600 font-bold'>Error: config.js missing or invalid.</span>";
+                if (firebaseConfig.apiKey === "MISSING") {
+                    // No overlay, silent failure or console log
+                    console.warn("Configuration Missing: Create config.js or paste keys.");
                 } else {
                     app = initializeApp(firebaseConfig);
                     auth = getAuth(app);
@@ -277,7 +303,8 @@
             let displayedCount = 5;
             let currentUser = null;
             let currentView = "home";
-            let currentAuthorFilter = null; // New state for author filtering
+            // Author Filter State
+            let currentAuthorFilter = null; 
             let dataListenerUnsubscribe = null;
 
             const mainContent = document.getElementById("main-content");
@@ -288,13 +315,14 @@
                 const searchInput = document.getElementById('search-input');
                 if (searchInput) {
                     searchInput.value = term;
+                    // Trigger the search logic manually
                     searchInput.dispatchEvent(new Event('input'));
-                    window.location.hash = ''; 
+                    window.location.hash = ''; // Ensure we are on home view
                     window.scrollTo(0,0);
                 }
             };
             
-            // Global Helper to Reset Home
+            // Global Helper to Reset Home (Clear search and go to home)
             window.resetHome = function() {
                 const searchInput = document.getElementById('search-input');
                 if (searchInput) {
@@ -305,7 +333,11 @@
             };
 
             async function init() {
-                if (!auth) return; // Stop if config failed
+                if (!auth) {
+                    const msg = document.getElementById('status-msg');
+                    if (msg) msg.innerText = "Error: App not initialized (Check Config)";
+                    return;
+                }
 
                 onAuthStateChanged(auth, (user) => {
                     currentUser = user;
@@ -321,6 +353,7 @@
                 window.addEventListener("hashchange", handleRouting);
                 setTimeout(handleRouting, 100);
 
+                // Global Window Scroll for Infinite Loading
                 window.addEventListener("scroll", () => {
                     if (currentView !== "home") return;
                     const st = document.getElementById("scroll-trigger");
@@ -369,20 +402,22 @@
                 const hash = window.location.hash;
                 updateFooterState();
                 window.scrollTo(0, 0);
-                
-                // Clear author filter on navigation unless we are navigating TO an author page
+
+                // Clear author filter on nav unless we are navigating TO an author page
                 if (!hash.startsWith('#author/')) {
                     currentAuthorFilter = null;
                 }
 
                 if (hash === "" || hash === "#") {
                     currentView = "home";
+                    // Reset displayed count on home nav so lazy load works again
                     displayedCount = 5;
                     if (allArticles.length > 0) renderHome();
                 } else if (hash.startsWith('#author/')) {
-                    // NEW: Author Filter Route
+                    // AUTHOR FILTER ROUTE
                     currentView = "home";
                     displayedCount = 5;
+                    // Decode URI component to handle spaces/special chars in names
                     currentAuthorFilter = decodeURIComponent(hash.split('/')[1]);
                     if (allArticles.length > 0) renderHome();
                 } else if (hash === "#login") {
@@ -420,6 +455,7 @@
                 if (window.siteConfig) {
                     articlesRef = collection(db, "articles");
                 } else if (typeof __app_id !== 'undefined') {
+                    // Chat environment fallback
                      articlesRef = collection(db, 'artifacts', __app_id, 'public', 'data', 'articles');
                 } else {
                     articlesRef = collection(db, "articles");
@@ -458,7 +494,12 @@
                     },
                     (error) => {
                         console.error("Error fetching articles:", error);
-                        mainContent.innerHTML = `<div class="text-center text-red-500 mt-10">Connection Error. Check console.</div>`;
+                        let msg = "Error connecting to database.";
+                        if (error.code === "permission-denied") {
+                            msg =
+                                "Permission Denied.<br>Ensure Firestore Rules allow public read access.";
+                        }
+                        mainContent.innerHTML = `<div class="text-center text-red-500 mt-10">${msg}</div>`;
                     },
                 );
             }
@@ -466,9 +507,15 @@
             // AUTO-SUMMARY GENERATOR
             function getSnippet(text, maxLength = 200) {
                 if (!text) return "No preview available.";
+                
+                // 1. Remove IMAGE: lines
                 let clean = text.replace(/^IMAGE:.*$/gm, "");
+                
+                // 2. Remove formatting symbols (**, -, *)
                 clean = clean.replace(/\*\*/g, "");
                 clean = clean.replace(/^[\-\*•]\s+/gm, "");
+                
+                // 3. Collapse whitespace (newlines to spaces)
                 clean = clean.replace(/\s+/g, " ").trim();
                 
                 if (clean.length <= maxLength) return clean;
@@ -483,12 +530,14 @@
                 let inList = false;
 
                 const processFormatting = (str) => {
+                    // Replace **text** with <strong>text</strong>
                     return str.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
                 };
 
                 lines.forEach((line) => {
                     const trimmed = line.trim();
                     
+                    // 1. Check for IMAGE: syntax
                     const imgMatch = trimmed.match(/^IMAGE:\s*(https?:\/\/\S+)(.*)?$/i);
                     
                     if (imgMatch) {
@@ -522,6 +571,7 @@
                         return; // Skip rest of loop for this line
                     }
 
+                    // 2. Check for List items
                     const listMatch = line.match(/^[\-\*]\s+(.*)/);
                     if (listMatch) {
                         if (!inList) {
@@ -562,9 +612,10 @@
                     // Check visibility logic first
                     if (!isArticleVisible(a)) return false;
                     
-                    // Check Author Filter (If active)
+                    // NEW: Author Filter Check
                     if (currentAuthorFilter && a.author !== currentAuthorFilter) return false;
 
+                    // Use effective date for search/display
                     const effectiveDate = (a.status === 'scheduled' && a.scheduledAt) ? a.scheduledAt : a.createdAt;
                     const dateStr = new Date(effectiveDate)
                         .toLocaleDateString()
@@ -573,12 +624,15 @@
                     return (
                         (a.title &&
                             a.title.toLowerCase().includes(searchTerm)) ||
+                        // Search the content now since we auto-generate summary if manual summary is missing
                         (a.content &&
                             a.content.toLowerCase().includes(searchTerm)) ||
+                        (a.summary && 
+                            a.summary.toLowerCase().includes(searchTerm)) ||
                         (a.author &&
                             a.author.toLowerCase().includes(searchTerm)) ||
                         (a.series &&
-                            a.series.toLowerCase().includes(searchTerm)) || 
+                            a.series.toLowerCase().includes(searchTerm)) || // Added Series to search
                         dateStr.includes(searchTerm)
                     );
                 });
@@ -588,7 +642,7 @@
                     displayedCount,
                 );
                 
-                // Show Author Header if Filtering
+                // Show Author Filter Header
                 let headerHtml = "";
                 if (currentAuthorFilter) {
                     headerHtml = `
@@ -609,14 +663,13 @@
                 }
 
                 let html = `<div class="fade-in space-y-10">`;
-                
-                // Add header if filtering
                 html = headerHtml + html;
                 
                 articlesToShow.forEach((article) => {
                     let badge = '';
                     let opacityClass = '';
                     
+                    // STAFF VIEW BADGES
                     if (currentUser) {
                         if (article.status === 'draft') {
                             badge = `<span class="bg-red-100 text-red-600 text-xs px-2 py-1 rounded mr-2 font-bold uppercase tracking-wide border border-red-200">DRAFT</span>`;
@@ -625,13 +678,16 @@
                             const now = Date.now();
                             const scheduled = article.scheduledAt || 0;
                             if (now < scheduled) {
+                                // Future
                                 const dateStr = new Date(scheduled).toLocaleString();
                                 badge = `<span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded mr-2 font-bold uppercase tracking-wide border border-yellow-200" title="Live at ${dateStr}">SCHEDULED</span>`;
                                 opacityClass = 'opacity-80';
                             }
+                            // If time has passed, NO BADGE. Just looks like normal live article.
                         }
                     }
 
+                    // Series Tag Logic (With Part #)
                     let seriesHtml = '';
                     if (article.series) {
                         const partText = article.seriesPart ? ` // PART ${article.seriesPart}` : '';
@@ -639,9 +695,11 @@
                         seriesHtml = `<div onclick="setSearch('${article.series.replace(/'/g, "\\'")}')" class="text-xs font-bold text-red-600 uppercase mb-1 cursor-pointer hover:underline tracking-wider">${displayText}</div>`;
                     }
 
-                    const autoSummary = getSnippet(article.content);
+                    // AUTOMATIC SUMMARY: Use manual summary if available, else auto-generate snippet
+                    const summaryText = article.summary ? article.summary : getSnippet(article.content);
+                    
                     const authorName = article.author || "Unknown";
-                    // NEW: Author Link
+                    // Clickable Author Link
                     const authorLink = `<a href="#author/${encodeURIComponent(authorName)}" class="hover:text-red-600 hover:underline transition-colors">${authorName}</a>`;
 
                     html += `
@@ -656,7 +714,7 @@
                     <div class="sm:ml-6 w-full">
                         ${seriesHtml}
                         <a href="#article/${article.id}"><h2 class="text-2xl font-bold mb-2 uppercase tracking-wide transition-colors cursor-pointer hover:text-gray-700">${badge}${article.title || "Untitled Article"}</h2></a>
-                        <p class="text-base mb-3 text-gray-800">${autoSummary}</p>
+                        <p class="text-base mb-3 text-gray-800">${summaryText}</p>
                         <div class="flex items-center space-x-3">
                             <a href="#article/${article.id}" class="bg-black text-white text-xs font-bold py-2 px-4 uppercase tracking-wider hover:bg-gray-800 transition-colors">Read More</a>
                             <span class="text-sm text-gray-600">by ${authorLink}</span>
@@ -680,6 +738,7 @@
                     return;
                 }
                 
+                // Security Check
                 if (!isArticleVisible(article)) {
                      mainContent.innerHTML = `<div class="text-center mt-20 text-red-600 font-bold text-xl">Access Denied: This article is not yet available.</div>`;
                      return;
@@ -689,6 +748,7 @@
 
                 let editBtn = "";
                 let draftBanner = "";
+                // Display date logic: Use scheduled date if available
                 let displayDate = article.createdAt;
                 if (article.status === 'scheduled' && article.scheduledAt) {
                     displayDate = article.scheduledAt;
@@ -708,13 +768,13 @@
                     }
                 }
                 
+                // Series Banner in Article Detail (With Part #)
                 let seriesBanner = '';
                 if (article.series) {
                     const partText = article.seriesPart ? ` • PART ${article.seriesPart}` : '';
                     seriesBanner = `<div class="mb-6 text-center"><span class="inline-block bg-black text-white text-xs font-bold px-3 py-1 uppercase tracking-widest cursor-pointer hover:bg-red-600 transition-colors" onclick="setSearch('${article.series.replace(/'/g, "\\'")}')">SERIES: ${article.series}${partText}</span></div>`;
                 }
-
-                // NEW: Clickable Author
+                
                 const authorName = article.author || "Unknown";
                 const authorLink = `<a href="#author/${encodeURIComponent(authorName)}" class="hover:text-red-600 hover:underline transition-colors border-b border-transparent hover:border-red-600">${authorName}</a>`;
 
@@ -907,7 +967,9 @@
                             </div>
                         </div>
 
-                        <!-- Manual summary removed. Auto-generated. -->
+                        <!-- Manual Summary Box Restored -->
+                        <div><label class="block text-xs font-bold uppercase mb-1">Short Summary</label><textarea id="summary" rows="2" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500" placeholder="Appears on the homepage...">${existingArticle ? existingArticle.summary : ""}</textarea></div>
+
                         <div><label class="block text-xs font-bold uppercase mb-1">Full Content</label><textarea id="content" rows="15" required class="w-full border-2 border-black p-2 focus:outline-none focus:border-red-500 font-mono text-sm" placeholder="Write here. Use - or * for automatic lists. Use **bold** for bold text. Use IMAGE: URL | Caption | Copyright for images.">${existingArticle ? existingArticle.content : ""}</textarea><p class="text-[10px] text-gray-500 mt-1">Start a line with - or * to create a bullet list. Use **text** for bold. Start a line with IMAGE: https://... | Caption | Copyright to insert an image.</p></div>
 
                         <div class="pt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -944,6 +1006,7 @@
                     input.addEventListener('input', () => {
                         const draftData = {
                             title: document.getElementById("title").value,
+                            summary: document.getElementById("summary").value,
                             content: document.getElementById("content").value,
                             status: document.getElementById("status").value,
                             series: document.getElementById("series").value,
@@ -958,6 +1021,7 @@
                 
                 if (savedDraft && !existingArticle) {
                     document.getElementById("title").value = savedDraft.title || "";
+                    document.getElementById("summary").value = savedDraft.summary || "";
                     document.getElementById("content").value = savedDraft.content || "";
                     document.getElementById("series").value = savedDraft.series || "";
                     document.getElementById("seriesPart").value = savedDraft.seriesPart || "";
@@ -1011,7 +1075,7 @@
                                 author: document.getElementById("author").value,
                                 imageUrl:
                                     document.getElementById("imageUrl").value,
-                                summary: "", // Empty as now auto-generated
+                                summary: document.getElementById("summary").value, // Manual summary restored
                                 content:
                                     document.getElementById("content").value,
                                 series: document.getElementById("series").value,
